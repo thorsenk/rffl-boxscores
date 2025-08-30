@@ -1,0 +1,4 @@
+espn_api>=0.39.1
+pandas>=2.2.0
+python-dateutil>=2.9.0
+typer>=0.9.0
