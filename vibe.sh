@@ -70,3 +70,24 @@ withac() {
   # usage: withac [--interval N] [--push] -- <command ...>
   bash ./scripts/with_autocommit.sh "$@"
 }
+
+autocommit_once() {
+  # usage: autocommit_once [push]
+  # Commits the next change then exits.
+  local push=${1:-0}
+  mkdir -p .git
+  ONCE=1 PUSH=$push nohup bash ./scripts/auto_commit.sh >/dev/null 2>&1 &
+  echo $! > .git/.auto_commit.pid
+  echo "🔁 Auto-commit will capture the next change (push=${push}). To stop: acstop"
+}
+
+autocommit_idle() {
+  # usage: autocommit_idle <idle_minutes> [push]
+  # Auto-stops after idle_minutes with no commits.
+  local idle=${1:?idle_minutes}
+  local push=${2:-0}
+  mkdir -p .git
+  MAX_IDLE_MINUTES=$idle PUSH=$push nohup bash ./scripts/auto_commit.sh >/dev/null 2>&1 &
+  echo $! > .git/.auto_commit.pid
+  echo "🔁 Auto-commit started (idle-stop=${idle}m, push=${push}). To stop: acstop"
+}
