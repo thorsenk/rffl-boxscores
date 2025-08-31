@@ -6,12 +6,13 @@ build-backend = "setuptools.build_meta"
 name = "rffl-boxscores"
 version = "0.1.0"
 description = "Clean ESPN fantasy boxscore exporter + validator"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = [
     "espn_api>=0.39.1",
     "pandas>=2.2.0", 
     "python-dateutil>=2.9.0",
-    "typer>=0.9.0"
+    "typer>=0.9.0",
+    "python-dotenv>=1.0.0"
 ]
 
 [project.scripts]

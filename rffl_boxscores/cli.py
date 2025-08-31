@@ -9,6 +9,9 @@ from typing import List, Dict, Any, Iterable, Tuple
 import pandas as pd
 import typer
 from espn_api.football import League
+from dotenv import load_dotenv, find_dotenv
+
+load_dotenv(find_dotenv(), override=False)
 
 app = typer.Typer(add_completion=False, help="RFFL clean exporter + validator")
 
@@ -195,57 +198,68 @@ def _export(
     end_week: int | None,
     out_path: str,
 ) -> str:
-    lg = League(league_id=league_id, year=year, espn_s2=espn_s2, swid=swid)
+    try:
+        lg = League(league_id=league_id, year=year, espn_s2=espn_s2, swid=swid)
+    except Exception as e:
+        raise RuntimeError(
+            f"Failed to initialize ESPN League (league={league_id}, year={year}). "
+            f"Check LEAGUE/ESPN_S2/SWID and network. Error: {e}"
+        ) from e
     rows: List[Row] = []
 
-    for week, boxscores in _iter_weeks(lg, start_week, end_week):
-        for m_idx, bs in enumerate(boxscores, start=1):
-            for side in ("home", "away"):
-                team = getattr(bs, f"{side}_team", None)
-                lineup = getattr(bs, f"{side}_lineup", None) or []
-                if not team:
-                    continue
+    try:
+        for week, boxscores in _iter_weeks(lg, start_week, end_week):
+            for m_idx, bs in enumerate(boxscores, start=1):
+                for side in ("home", "away"):
+                    team = getattr(bs, f"{side}_team", None)
+                    lineup = getattr(bs, f"{side}_lineup", None) or []
+                    if not team:
+                        continue
 
-                # Build starter list (we round per-player first, then sum -> totals match rows exactly)
-                starters = []
-                stamped = []
-                for bp in lineup:
-                    slot = _norm_slot(
-                        getattr(bp, "slot_position", None),
-                        getattr(bp, "position", None),
-                    )
-                    proj = round(_f(getattr(bp, "projected_points", 0.0)), 2)
-                    act = round(_f(getattr(bp, "points", 0.0)), 2)
-                    row = {
-                        "slot": slot,
-                        "slot_type": "starters" if _is_starter(slot) else "bench",
-                        "player_name": getattr(bp, "name", None),
-                        "position": getattr(bp, "position", None),
-                        "injured": getattr(bp, "injured", False),
-                        "injury_status": getattr(bp, "injuryStatus", None)
-                        or getattr(bp, "injury_status", "ACTIVE"),
-                        "bye_week": getattr(bp, "on_bye_week", False),
-                        "projected_points": proj,
-                        "actual_points": act,
-                    }
-                    stamped.append(row)
-                    if row["slot_type"] == "starters":
-                        starters.append(row)
-
-                team_proj = round(sum(r["projected_points"] for r in starters), 2)
-                team_act = round(sum(r["actual_points"] for r in starters), 2)
-
-                for r in stamped:
-                    rows.append(
-                        Row(
-                            week=week,
-                            matchup=m_idx,
-                            team_abbrev=_get_team_abbrev(team),
-                            team_proj_total=team_proj,
-                            team_actual_total=team_act,
-                            **r,
+                    # Build starter list (we round per-player first, then sum -> totals match rows exactly)
+                    starters = []
+                    stamped = []
+                    for bp in lineup:
+                        slot = _norm_slot(
+                            getattr(bp, "slot_position", None),
+                            getattr(bp, "position", None),
                         )
-                    )
+                        proj = round(_f(getattr(bp, "projected_points", 0.0)), 2)
+                        act = round(_f(getattr(bp, "points", 0.0)), 2)
+                        row = {
+                            "slot": slot,
+                            "slot_type": "starters" if _is_starter(slot) else "bench",
+                            "player_name": getattr(bp, "name", None),
+                            "position": getattr(bp, "position", None),
+                            "injured": getattr(bp, "injured", False),
+                            "injury_status": getattr(bp, "injuryStatus", None)
+                            or getattr(bp, "injury_status", "ACTIVE"),
+                            "bye_week": getattr(bp, "on_bye_week", False),
+                            "projected_points": proj,
+                            "actual_points": act,
+                        }
+                        stamped.append(row)
+                        if row["slot_type"] == "starters":
+                            starters.append(row)
+
+                    team_proj = round(sum(r["projected_points"] for r in starters), 2)
+                    team_act = round(sum(r["actual_points"] for r in starters), 2)
+
+                    for r in stamped:
+                        rows.append(
+                            Row(
+                                week=week,
+                                matchup=m_idx,
+                                team_abbrev=_get_team_abbrev(team),
+                                team_proj_total=team_proj,
+                                team_actual_total=team_act,
+                                **r,
+                            )
+                        )
+    except Exception as e:
+        raise RuntimeError(
+            f"Failed while fetching box scores. Consider checking weeks or cookies. Error: {e}"
+        ) from e
 
     out = out_path or f"validated_boxscores_{year}.csv"
     pd.DataFrame([asdict(r) for r in rows]).to_csv(
@@ -256,7 +270,7 @@ def _export(
 
 @app.command("export")
 def cmd_export(
-    league: int = typer.Option(..., help="ESPN leagueId"),
+    league: int | None = typer.Option(None, help="ESPN leagueId (defaults to $LEAGUE)"),
     year: int = typer.Option(..., help="Season year"),
     out: str = typer.Option(None, help="Output CSV path"),
     start_week: int = typer.Option(None, help="Start week (default auto)"),
@@ -265,15 +279,29 @@ def cmd_export(
     swid: str = typer.Option(None, help="Cookie (private leagues). Falls back to $SWID"),
 ):
     """Export ESPN fantasy football boxscores to CSV format."""
-    path = _export(
-        league_id=league,
-        year=year,
-        espn_s2=espn_s2 or os.getenv("ESPN_S2"),
-        swid=swid or os.getenv("SWID"),
-        start_week=start_week,
-        end_week=end_week,
-        out_path=out or f"validated_boxscores_{year}.csv",
-    )
+    league_id = league
+    if league_id is None:
+        env_league = os.getenv("LEAGUE")
+        if env_league and env_league.isdigit():
+            league_id = int(env_league)
+    if league_id is None:
+        typer.echo("❌ Missing league id. Pass --league or set $LEAGUE in .env")
+        raise typer.Exit(1)
+
+    try:
+        path = _export(
+            league_id=league_id,
+            year=year,
+            espn_s2=espn_s2 or os.getenv("ESPN_S2"),
+            swid=swid or os.getenv("SWID"),
+            start_week=start_week,
+            end_week=end_week,
+            out_path=out or f"validated_boxscores_{year}.csv",
+        )
+    except Exception as e:
+        typer.echo(f"❌ Export failed: {e}")
+        raise typer.Exit(1)
+
     typer.echo(f"✅ Wrote {path}")
 
 

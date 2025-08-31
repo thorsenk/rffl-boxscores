@@ -38,3 +38,35 @@ bsp() {
   # usage: bsp <year>
   bs "${1:?year}" 15 17
 }
+
+# Auto-commit helper (optional)
+autocommit() {
+  # usage: autocommit [interval_seconds] [push]
+  # example: autocommit 30 1  # every 30s and push
+  local interval=${1:-60}
+  local push=${2:-0}
+  mkdir -p .git
+  INTERVAL=$interval PUSH=$push nohup bash ./scripts/auto_commit.sh >/dev/null 2>&1 &
+  echo $! > .git/.auto_commit.pid
+  echo "🔁 Auto-commit started (interval=${interval}s, push=${push}). To stop: acstop"
+}
+
+acstop() {
+  # usage: acstop
+  if [ -f .git/.auto_commit.pid ]; then
+    local pid
+    pid=$(cat .git/.auto_commit.pid || true)
+    if [ -n "$pid" ]; then
+      kill "$pid" >/dev/null 2>&1 || true
+    fi
+    rm -f .git/.auto_commit.pid
+    echo "🛑 Auto-commit stopped"
+  else
+    echo "ℹ️  No auto-commit PID file (.git/.auto_commit.pid)."
+  fi
+}
+
+withac() {
+  # usage: withac [--interval N] [--push] -- <command ...>
+  bash ./scripts/with_autocommit.sh "$@"
+}

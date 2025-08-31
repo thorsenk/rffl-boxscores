@@ -252,3 +252,49 @@ The tool includes robust error handling for:
 ## License
 
 MIT License - see LICENSE file for details.
+
+## Agent Notes
+
+- Env precedence: CLI flags > real environment > `.env` (auto-loaded).
+- League default: if `--league` is omitted, the tool uses `$LEAGUE`.
+- Exit codes: non-zero on export/validation errors for easy agent checks.
+- Stable outputs: CSV columns and ordering are deterministic.
+
+### Optional: Auto-Commit Loop
+
+- Start a lightweight auto-commit loop that commits any staged/unstaged changes
+  at an interval (default 60s). Useful for solo‑vibecoding + agent sessions.
+
+```bash
+# start with defaults (every 60s, no push)
+bash ./scripts/auto_commit.sh
+
+# or via vibe function
+source ./vibe.sh
+autocommit 30 1   # every 30s and push
+```
+
+- Safety: `.env` and common secrets are already gitignored. The loop skips if
+  merge conflicts exist. Stop with `pkill -f auto_commit.sh` or Ctrl+C if run
+  foreground.
+  If the script is not executable, run: `chmod +x scripts/auto_commit.sh`.
+
+### Run Dev Server + Auto-Commit in one command
+
+- Use the wrapper to run any dev command alongside auto‑commit:
+
+```bash
+# generic pattern
+bash ./scripts/with_autocommit.sh -- <your dev command>
+
+# examples
+bash ./scripts/with_autocommit.sh --interval 30 --push -- uvicorn app:app --reload
+bash ./scripts/with_autocommit.sh -- npm run dev
+```
+
+- Or via vibe helpers:
+
+```bash
+source ./vibe.sh
+withac --interval 30 --push -- uvicorn app:app --reload
+```
