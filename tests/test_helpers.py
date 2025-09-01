@@ -22,41 +22,51 @@ def test__f_coercion():
 
 
 def _mk_lineup(rows):
-    return pd.DataFrame(rows, columns=[
-        "slot", "player_name", "position", "projected_points", "actual_points"
-    ])
+    return pd.DataFrame(
+        rows,
+        columns=[
+            "slot",
+            "player_name",
+            "position",
+            "projected_points",
+            "actual_points",
+        ],
+    )
 
 
 def test_validate_rffl_lineup_valid():
-    starters = _mk_lineup([
-        ("QB", "QB1", "QB", 10, 12),
-        ("RB", "RB1", "RB", 10, 10),
-        ("RB", "RB2", "RB", 10, 9),
-        ("WR", "WR1", "WR", 10, 8),
-        ("WR", "WR2", "WR", 10, 7),
-        ("TE", "TE1", "TE", 10, 6),
-        ("FLEX", "RB3", "RB", 8, 5),
-        ("D/ST", "DST1", "D/ST", 5, 5),
-        ("K", "K1", "K", 5, 5),
-    ])
+    starters = _mk_lineup(
+        [
+            ("QB", "QB1", "QB", 10, 12),
+            ("RB", "RB1", "RB", 10, 10),
+            ("RB", "RB2", "RB", 10, 9),
+            ("WR", "WR1", "WR", 10, 8),
+            ("WR", "WR2", "WR", 10, 7),
+            ("TE", "TE1", "TE", 10, 6),
+            ("FLEX", "RB3", "RB", 8, 5),
+            ("D/ST", "DST1", "D/ST", 5, 5),
+            ("K", "K1", "K", 5, 5),
+        ]
+    )
     result = _validate_rffl_lineup(starters)
     assert result["is_valid"] is True
     assert result["total_issues"] == 0
 
 
 def test_validate_rffl_lineup_issues():
-    starters = _mk_lineup([
-        ("QB", "QB1", "QB", 10, 12),
-        ("RB", "RB1", "RB", 10, 10),
-        ("WR", "WR1", "WR", 10, 8),
-        ("WR", "WR2", "WR", 10, 7),
-        ("TE", "TE1", "TE", 10, 6),
-        ("FLEX", "QB2", "QB", 8, 5),  # invalid flex
-        ("D/ST", "DST1", "D/ST", 5, 5),
-        ("K", "K1", "K", 5, 5),
-        ("K", "K2", "K", 5, 5),  # wrong slot count
-    ])
+    starters = _mk_lineup(
+        [
+            ("QB", "QB1", "QB", 10, 12),
+            ("RB", "RB1", "RB", 10, 10),
+            ("WR", "WR1", "WR", 10, 8),
+            ("WR", "WR2", "WR", 10, 7),
+            ("TE", "TE1", "TE", 10, 6),
+            ("FLEX", "QB2", "QB", 8, 5),  # invalid flex
+            ("D/ST", "DST1", "D/ST", 5, 5),
+            ("K", "K1", "K", 5, 5),
+            ("K", "K2", "K", 5, 5),  # wrong slot count
+        ]
+    )
     result = _validate_rffl_lineup(starters)
     assert result["is_valid"] is False
     assert result["total_issues"] > 0
-

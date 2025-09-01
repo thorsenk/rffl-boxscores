@@ -259,6 +259,7 @@ MIT License - see LICENSE file for details.
 - League default: if `--league` is omitted, the tool uses `$LEAGUE`.
 - Exit codes: non-zero on export/validation errors for easy agent checks.
 - Stable outputs: CSV columns and ordering are deterministic.
+ - Command reference: see `AGENTS.md` for all CLI, vibe helpers, and scripts.
 
 ### Optional: Auto-Commit Loop
 
@@ -277,7 +278,15 @@ autocommit 30 1   # every 30s and push
 - Safety: `.env` and common secrets are already gitignored. The loop skips if
   merge conflicts exist. Stop with `pkill -f auto_commit.sh` or Ctrl+C if run
   foreground.
-  If the script is not executable, run: `chmod +x scripts/auto_commit.sh`.
+If the script is not executable, run: `chmod +x scripts/auto_commit.sh`.
+
+- CI control: by default, auto-commits include `[skip ci]` to avoid triggering
+  workflows. To allow CI on autosaves, set `SKIP_CI=0` when starting the loop:
+
+```bash
+SKIP_CI=0 bash ./scripts/auto_commit.sh           # foreground
+SKIP_CI=0 source ./vibe.sh && autocommit 60 1     # via vibe helper
+```
 
 ### Run Dev Server + Auto-Commit in one command
 
@@ -298,3 +307,18 @@ bash ./scripts/with_autocommit.sh -- npm run dev
 source ./vibe.sh
 withac --interval 30 --push -- uvicorn app:app --reload
 ```
+
+### Safe Audit (avoid large outputs)
+
+- Use the built-in safe audit to collect repo diagnostics without overflowing the chat/API payload limit. It writes full logs under `build/audit` and only prints short summaries.
+
+```bash
+# quick summary + saved logs
+source ./vibe.sh
+audit
+
+# open full logs afterward
+ls build/audit/
+```
+
+- Tip: avoid `cat`-ing huge files or dumping entire CSVs in chat sessions. Prefer `sed -n '1,200p' <file>` or `rg pattern | head -n 200`.

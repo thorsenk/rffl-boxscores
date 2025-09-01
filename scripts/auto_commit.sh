@@ -14,6 +14,7 @@ fi
 
 interval="${INTERVAL:-60}"
 push_flag="${PUSH:-0}"
+skip_ci_flag="${SKIP_CI:-1}"
 # Optional behavior controls
 # ONCE=1           -> exit after the first successful commit
 # MAX_IDLE_MINUTES -> auto-exit if no commits after N minutes (default: 0 = never)
@@ -26,7 +27,7 @@ backoff_max="${BACKOFF_MAX:-300}"
 current_sleep="$interval"
 last_commit_ts="$(date +%s)"
 
-echo "🔁 Auto-commit loop: interval=${interval}s push=${push_flag} once=${once_flag} idle=${max_idle_min}m backoff=${backoff_flag} (Ctrl+C to stop)"
+echo "🔁 Auto-commit loop: interval=${interval}s push=${push_flag} skip_ci=${skip_ci_flag} once=${once_flag} idle=${max_idle_min}m backoff=${backoff_flag} (Ctrl+C to stop)"
 
 while true; do
   # Skip if merge conflicts present
@@ -44,7 +45,11 @@ while true; do
     branch="$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo main)"
     ts="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
     changes="$(git diff --cached --name-status | sed -e 's/^/  /' | head -n 20)"
-    msg="auto: ${ts} on ${branch} [solo-vibe+agent]"
+    suffix="[solo-vibe+agent]"
+    if [ "$skip_ci_flag" = "1" ]; then
+      suffix="$suffix [skip ci]"
+    fi
+    msg="auto: ${ts} on ${branch} ${suffix}"
     git commit -m "$msg" -m "$changes" || true
     echo "✅ Committed: $msg"
 

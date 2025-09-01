@@ -91,3 +91,21 @@ autocommit_idle() {
   echo $! > .git/.auto_commit.pid
   echo "🔁 Auto-commit started (idle-stop=${idle}m, push=${push}). To stop: acstop"
 }
+
+# Run a safe, truncated audit and save full logs under build/audit
+audit() {
+  # usage: audit
+  if [ ! -x scripts/safe_audit.sh ]; then
+    chmod +x scripts/safe_audit.sh 2>/dev/null || true
+  fi
+  bash scripts/safe_audit.sh "$@"
+}
+
+# Print only the first N lines of a file (default 200)
+pview() {
+  # usage: pview <file> [lines]
+  local file=${1:?file}
+  local lines=${2:-200}
+  echo "--- ${file} (first ${lines} lines) ---"
+  sed -n "1,${lines}p" "$file" 2>/dev/null || head -n "$lines" "$file" 2>/dev/null || true
+}

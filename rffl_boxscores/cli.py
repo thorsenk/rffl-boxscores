@@ -26,7 +26,7 @@ RFFL_LINEUP_REQUIREMENTS = {
     "TE": 1,
     "FLEX": 1,
     "D/ST": 1,
-    "K": 1
+    "K": 1,
 }
 
 # Valid positions for FLEX slot
@@ -78,97 +78,105 @@ def _iter_weeks(league: League, start: int | None, end: int | None):
 def _get_team_abbrev(team) -> str:
     """Get team abbreviation from ESPN API Team object."""
     # Try different possible attribute names for team abbreviation
-    for attr in ['abbrev', 'team_abbrev', 'abbreviation', 'team_id', 'name']:
+    for attr in ["abbrev", "team_abbrev", "abbreviation", "team_id", "name"]:
         if hasattr(team, attr):
             value = getattr(team, attr)
             if value and isinstance(value, str):
                 return value
     # Fallback to team name if no abbreviation found
-    return getattr(team, 'name', 'Unknown')
+    return getattr(team, "name", "Unknown")
 
 
 def _validate_rffl_lineup(starters_df: pd.DataFrame) -> Dict[str, Any]:
     """Validate RFFL lineup compliance and return issues found."""
     issues = []
-    
+
     # Count starters by slot
-    slot_counts = starters_df['slot'].value_counts().to_dict()
-    
+    slot_counts = starters_df["slot"].value_counts().to_dict()
+
     # Check each required position
     for position, required_count in RFFL_LINEUP_REQUIREMENTS.items():
         actual_count = slot_counts.get(position, 0)
         if actual_count != required_count:
-            issues.append({
-                'type': 'count_mismatch',
-                'position': position,
-                'required': required_count,
-                'actual': actual_count,
-                'description': f"Expected {required_count} {position}, found {actual_count}"
-            })
-    
+            issues.append(
+                {
+                    "type": "count_mismatch",
+                    "position": position,
+                    "required": required_count,
+                    "actual": actual_count,
+                    "description": f"Expected {required_count} {position}, found {actual_count}",
+                }
+            )
+
     # Check FLEX eligibility
-    flex_players = starters_df[starters_df['slot'] == 'FLEX']
+    flex_players = starters_df[starters_df["slot"] == "FLEX"]
     for _, player in flex_players.iterrows():
-        player_position = player['position']
+        player_position = player["position"]
         if player_position not in FLEX_ELIGIBLE_POSITIONS:
-            issues.append({
-                'type': 'flex_ineligible',
-                'position': player_position,
-                'player': player['player_name'],
-                'description': f"FLEX player {player['player_name']} has position {player_position} (not RB/WR/TE)"
-            })
-    
+            issues.append(
+                {
+                    "type": "flex_ineligible",
+                    "position": player_position,
+                    "player": player["player_name"],
+                    "description": f"FLEX player {player['player_name']} has position {player_position} (not RB/WR/TE)",
+                }
+            )
+
     # Check for duplicate players
-    player_counts = starters_df['player_name'].value_counts()
+    player_counts = starters_df["player_name"].value_counts()
     duplicates = player_counts[player_counts > 1]
     for player, count in duplicates.items():
-        issues.append({
-            'type': 'duplicate_player',
-            'player': player,
-            'count': count,
-            'description': f"Player {player} appears {count} times in starters"
-        })
-    
+        issues.append(
+            {
+                "type": "duplicate_player",
+                "player": player,
+                "count": count,
+                "description": f"Player {player} appears {count} times in starters",
+            }
+        )
+
     # Check for invalid positions in specific slots
     for _, player in starters_df.iterrows():
-        slot = player['slot']
-        position = player['position']
-        
+        slot = player["slot"]
+        position = player["position"]
+
         # QB slot should only have QB position
-        if slot == 'QB' and position != 'QB':
-            issues.append({
-                'type': 'invalid_position_in_slot',
-                'slot': slot,
-                'position': position,
-                'player': player['player_name'],
-                'description': f"QB slot contains {position} player {player['player_name']}"
-            })
-        
+        if slot == "QB" and position != "QB":
+            issues.append(
+                {
+                    "type": "invalid_position_in_slot",
+                    "slot": slot,
+                    "position": position,
+                    "player": player["player_name"],
+                    "description": f"QB slot contains {position} player {player['player_name']}",
+                }
+            )
+
         # K slot should only have K position
-        if slot == 'K' and position != 'K':
-            issues.append({
-                'type': 'invalid_position_in_slot',
-                'slot': slot,
-                'position': position,
-                'player': player['player_name'],
-                'description': f"K slot contains {position} player {player['player_name']}"
-            })
-        
+        if slot == "K" and position != "K":
+            issues.append(
+                {
+                    "type": "invalid_position_in_slot",
+                    "slot": slot,
+                    "position": position,
+                    "player": player["player_name"],
+                    "description": f"K slot contains {position} player {player['player_name']}",
+                }
+            )
+
         # D/ST slot should only have D/ST position
-        if slot == 'D/ST' and position != 'D/ST':
-            issues.append({
-                'type': 'invalid_position_in_slot',
-                'slot': slot,
-                'position': position,
-                'player': player['player_name'],
-                'description': f"D/ST slot contains {position} player {player['player_name']}"
-            })
-    
-    return {
-        'is_valid': len(issues) == 0,
-        'issues': issues,
-        'total_issues': len(issues)
-    }
+        if slot == "D/ST" and position != "D/ST":
+            issues.append(
+                {
+                    "type": "invalid_position_in_slot",
+                    "slot": slot,
+                    "position": position,
+                    "player": player["player_name"],
+                    "description": f"D/ST slot contains {position} player {player['player_name']}",
+                }
+            )
+
+    return {"is_valid": len(issues) == 0, "issues": issues, "total_issues": len(issues)}
 
 
 @dataclass
@@ -275,8 +283,12 @@ def cmd_export(
     out: str = typer.Option(None, help="Output CSV path"),
     start_week: int = typer.Option(None, help="Start week (default auto)"),
     end_week: int = typer.Option(None, help="End week (default auto)"),
-    espn_s2: str = typer.Option(None, help="Cookie (private leagues). Falls back to $ESPN_S2"),
-    swid: str = typer.Option(None, help="Cookie (private leagues). Falls back to $SWID"),
+    espn_s2: str = typer.Option(
+        None, help="Cookie (private leagues). Falls back to $ESPN_S2"
+    ),
+    swid: str = typer.Option(
+        None, help="Cookie (private leagues). Falls back to $SWID"
+    ),
 ):
     """Export ESPN fantasy football boxscores to CSV format."""
     league_id = league
@@ -308,7 +320,9 @@ def cmd_export(
 @app.command("validate")
 def cmd_validate(
     csv_path: str = typer.Argument(..., help="validated_boxscores_YYYY.csv"),
-    tolerance: float = typer.Option(0.0, help="Allowed |proj_sum - team_proj_total| (e.g., 0.02)"),
+    tolerance: float = typer.Option(
+        0.0, help="Allowed |proj_sum - team_proj_total| (e.g., 0.02)"
+    ),
 ):
     """Validate exported boxscore data for consistency and completeness."""
     df = pd.read_csv(csv_path)
@@ -356,29 +370,37 @@ def cmd_validate_lineup(
     """Validate RFFL lineup compliance (1 QB, 2 RB, 2 WR, 1 TE, 1 FLEX, 1 D/ST, 1 K)."""
     df = pd.read_csv(csv_path)
     starters = df[df["slot_type"] == "starters"].copy()
-    
+
     # Group by team-week and validate each lineup
     lineup_issues = []
     valid_lineups = 0
     total_lineups = 0
-    
-    for (week, matchup, team), lineup_df in starters.groupby(["week", "matchup", "team_abbrev"]):
+
+    for (week, matchup, team), lineup_df in starters.groupby(
+        ["week", "matchup", "team_abbrev"]
+    ):
         total_lineups += 1
         validation = _validate_rffl_lineup(lineup_df)
-        
-        if validation['is_valid']:
+
+        if validation["is_valid"]:
             valid_lineups += 1
         else:
-            for issue in validation['issues']:
-                lineup_issues.append({
-                    'week': week,
-                    'matchup': matchup,
-                    'team_abbrev': team,
-                    'issue_type': issue['type'],
-                    'description': issue['description'],
-                    **{k: v for k, v in issue.items() if k not in ['type', 'description']}
-                })
-    
+            for issue in validation["issues"]:
+                lineup_issues.append(
+                    {
+                        "week": week,
+                        "matchup": matchup,
+                        "team_abbrev": team,
+                        "issue_type": issue["type"],
+                        "description": issue["description"],
+                        **{
+                            k: v
+                            for k, v in issue.items()
+                            if k not in ["type", "description"]
+                        },
+                    }
+                )
+
     # Print summary
     typer.echo(f"RFFL Lineup Validation Report")
     typer.echo(f"=" * 50)
@@ -386,26 +408,30 @@ def cmd_validate_lineup(
     typer.echo(f"✅ Valid lineups: {valid_lineups}")
     typer.echo(f"❌ Invalid lineups: {total_lineups - valid_lineups}")
     typer.echo(f"Total issues found: {len(lineup_issues)}")
-    
+
     if lineup_issues:
         typer.echo(f"\nIssues by type:")
         issue_types = {}
         for issue in lineup_issues:
-            issue_type = issue['issue_type']
+            issue_type = issue["issue_type"]
             issue_types[issue_type] = issue_types.get(issue_type, 0) + 1
-        
+
         for issue_type, count in sorted(issue_types.items()):
             typer.echo(f"  {issue_type}: {count}")
-        
+
         # Write detailed report
-        report_path = out or os.path.splitext(csv_path)[0] + "_lineup_validation_report.csv"
+        report_path = (
+            out or os.path.splitext(csv_path)[0] + "_lineup_validation_report.csv"
+        )
         pd.DataFrame(lineup_issues).to_csv(report_path, index=False)
         typer.echo(f"\n📄 Detailed report written to: {report_path}")
-        
+
         # Show first few issues
         typer.echo(f"\nFirst 5 issues:")
         for i, issue in enumerate(lineup_issues[:5]):
-            typer.echo(f"  {i+1}. Week {issue['week']} Matchup {issue['matchup']} {issue['team_abbrev']}: {issue['description']}")
+            typer.echo(
+                f"  {i+1}. Week {issue['week']} Matchup {issue['matchup']} {issue['team_abbrev']}: {issue['description']}"
+            )
     else:
         typer.echo(f"\n🎉 All lineups are RFFL compliant!")
 

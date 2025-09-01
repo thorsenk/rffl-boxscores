@@ -1,0 +1,48 @@
+Agent Command Reference
+
+Overview
+- Audience: solo‑vibecoding + agent workflows.
+- Goal: fast, predictable commands with small, stable outputs.
+
+Environment
+- Vars: `LEAGUE`, `ESPN_S2`, `SWID` (dotenv auto‑loads `.env`).
+- Precedence: CLI flags > real env > `.env`.
+
+CLI Commands
+- `rffl-bs --help`: show main help.
+- `rffl-bs export --league <id> --year <year> [--start-week N] [--end-week N] [--out PATH] [--espn-s2 S2] [--swid SWID]`
+  Export season boxscores to CSV (`validated_boxscores_<year>.csv` by default).
+- `rffl-bs validate <csv> [--tolerance FLOAT]`
+  Validate sums and starter counts; writes `<csv>_validation_report.csv` on issues.
+- `rffl-bs validate-lineup <csv> [--out PATH]`
+  Validate RFFL lineup rules; writes `<csv>_lineup_validation_report.csv` on issues.
+
+Vibe Helpers (source `./vibe.sh`)
+- `bs <year> [start] [end] [out]`: export using `$LEAGUE`.
+- `bsv <year>`: validate `validated_boxscores_<year>.csv`.
+- `bsl <year>`: lineup validation for `validated_boxscores_<year>.csv`.
+- `bsp <year>`: export weeks 15–17 (playoffs helper).
+- `withac --interval N [--push] -- <cmd>`: run `<cmd>` with auto‑commit in background.
+- `autocommit [interval] [push]`: loop commits every `interval` seconds (default 60).
+- `autocommit_idle <idle_minutes> [push]`: commit on changes; exit after idle.
+- `autocommit_once [push]`: commit next change then exit.
+- `acstop`: stop auto‑commit loop.
+- `audit`: safe audit; prints summaries, saves full logs to `build/audit/`.
+- `pview <file> [lines]`: print first N lines (default 200) of a file.
+
+Scripts
+- `scripts/auto_commit.sh`
+  Env: `INTERVAL` (sec), `PUSH` (0/1), `ONCE` (0/1), `MAX_IDLE_MINUTES`, `BACKOFF` (0/1), `SKIP_CI` (default 1 → adds "[skip ci]").
+- `scripts/with_autocommit.sh`:
+  Wrapper to run a dev command with auto‑commit; stops loop on exit.
+- `scripts/safe_audit.sh`:
+  Collects diagnostics; truncates console output; writes logs to `build/audit/`.
+
+Exit Codes (CLI)
+- `0`: success.
+- `1`: argument/config/network/data errors (friendly message via Typer).
+
+Safe Output Tips
+- Prefer `pview file 200`, `sed -n '1,200p' file`, or `rg pattern | head -n 200`.
+- Avoid dumping large CSVs or logs into chat; use `audit` then open files from `build/audit/`.
+

@@ -1,0 +1,80 @@
+# Global Cursor Rules for Solo‑Vibecoding + Agent Workflows
+
+## Development Philosophy
+
+I am learning to become a more experienced end-to-end developer, but I prefer to leverage context engineering rather than writing code myself. Operate as a fully agentic system. Use automation, clarity, and best practices by default.
+
+## Context-Engineered Workflow
+
+1. **Explore** – Read relevant files, infer architecture, and build mental model before coding. Pay special attention to existing patterns, configuration systems, automation tools, and domain-specific workflows.
+
+2. **Plan** – Create TodoWrite task lists for non-trivial work. Clarify goals, modules, and structural decisions. Consider how new features integrate with existing CLI commands, validation systems, or data pipelines.
+
+3. **Execute** – Implement in testable, PR-sized chunks. Include tests using project conventions. Follow established patterns for the project's domain and technology stack.
+
+## Solo‑Vibecoding + Agent Workflows
+
+- **Fast, predictable commands** with small, stable outputs - avoid overwhelming responses
+- **Agent-friendly patterns** - use clear, structured outputs that work well with automation
+- **Context preservation** - maintain state and build on previous interactions
+- **Iterative refinement** - expect to iterate on solutions rather than perfect first attempts
+- **Tool integration** - work seamlessly with existing scripts, helpers, and automation
+- **Safe defaults** - prefer conservative, well-tested approaches over experimental ones
+- **Output safety** - use pagination, head, truncation for large files/data; avoid dumping entire datasets
+
+## Environment Awareness
+
+**Python Projects:**
+- Check pyproject.toml for dependencies, dev tools (black, flake8, pytest)
+- Never assume libraries exist - verify before using
+- Follow existing formatting and linting conventions
+
+**CLI Tools:**
+- Understand command structure, help text, and exit codes
+- Check for existing subcommands before adding new ones
+- Maintain consistent argument patterns
+
+**Data Processing:**
+- Respect schemas, validation patterns, and safe output practices
+- Use pagination and truncation for large datasets
+- Preserve data integrity and column ordering
+
+**Configuration Precedence:**
+- CLI flags > environment variables > .env files > defaults
+- Auto-load .env when present
+- Fail fast with clear error messages for missing required config
+
+## Development Automation
+
+**Auto-commit workflows** - understand and leverage background commit loops for iterative development
+
+**Validation pipelines** - always run linting/formatting and tests before considering work complete
+
+**Safe audit practices** - use truncated outputs for diagnostics, save full logs separately
+
+**Domain-specific helpers** - prefer project command aliases over raw CLI when available
+
+## Core Expectations
+
+- Translate my natural language into complete, working code
+- Seamlessly integrate any code I provide (often AI-generated)  
+- Automatically set up environments, manage dependencies, and scaffold as needed
+- Always explain what the code does, how it works, and why it was written that way
+- If unclear, make informed assumptions and proceed without prompting me
+- Leverage existing automation tools when appropriate
+- Follow established patterns for the project's domain
+- Respect existing workflows and data processing pipelines
+- Use safe output practices for large outputs
+- Maintain appropriate configuration precedence
+
+## Key Principles
+
+**Pattern Recognition** - Identify and follow existing architectural patterns in the codebase
+
+**Automation Integration** - Work with, not against, existing automation and tooling
+
+**Domain Awareness** - Adapt to the specific domain (CLI tools, web apps, data processing, etc.)
+
+**Safe Practices** - Handle large outputs, sensitive data, and error conditions appropriately
+
+**Agent Collaboration** - Design outputs and workflows that work well in solo‑vibecoding + agent environments
