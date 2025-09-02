@@ -14,6 +14,8 @@ CLI Commands
   Export season boxscores to CSV (`validated_boxscores_<year>.csv` by default). Use `--fill-missing-slots` to insert 0‑pt placeholders for missing required starters (see Enhanced Matchup Box Scores below).
 - `rffl-bs h2h --league <id> --year <year> [--start-week N] [--end-week N] [--out PATH] [--espn-s2 S2] [--swid SWID]`
   Export simplified head‑to‑head matchup results to CSV (`h2h_<year>.csv` by default). Columns: week, matchup, home_team, away_team, home_score, away_score, winner, margin. Compatible with older seasons (pre‑2019) where per‑player boxscores aren’t reliable.
+- `rffl-bs draft --league <id> --year <year> [--out PATH] [--espn-s2 S2] [--swid SWID]`
+  Export season draft results to CSV. Default path: `data/seasons/<year>/draft.csv`. Columns include year, round, round_pick, team_abbrev, player_id, player_name, bid_amount, keeper, nominating_team.
 - `rffl-bs validate <csv> [--tolerance FLOAT]`
   Validate sums and starter counts; writes `<csv>_validation_report.csv` on issues.
 - `rffl-bs validate-lineup <csv> [--out PATH]`
@@ -26,8 +28,9 @@ Enhanced Matchup Box Scores
 - Optional `--fill-missing-slots` ensures 9 starters by inserting `EMPTY SLOT - {SLOT}` rows with 0.0 points when ESPN data has incomplete starters (does not change totals). See `RFFL.md`.
 
 Vibe Helpers (source `./vibe.sh`)
-- `bs <year> [start] [end] [out]`: export using `$LEAGUE`.
+- `bs <year> [start] [end] [out]`: export using `$LEAGUE`. Defaults to `data/seasons/<year>/boxscores.csv`, adds `--fill-missing-slots` and enforces `--require-clean`.
 - `h2h <year> [start] [end] [out]`: export simplified H2H results using `$LEAGUE`.
+- `draft <year> [out]`: export draft results to `data/seasons/<year>/draft.csv` by default.
 - `bsv <year>`: validate `validated_boxscores_<year>.csv`.
 - `bsl <year>`: lineup validation for `validated_boxscores_<year>.csv`.
 - `bsp <year>`: export weeks 15–17 (playoffs helper).
@@ -54,3 +57,9 @@ Exit Codes (CLI)
 Safe Output Tips
 - Prefer `pview file 200`, `sed -n '1,200p' file`, or `rg pattern | head -n 200`.
 - Avoid dumping large CSVs or logs into chat; use `audit` then open files from `build/audit/`.
+
+Data Layout
+- Clean season data is stored under `data/seasons/<year>/`:
+  - 2019+ boxscores: `boxscores.csv` (clean only; overwritten)
+  - Legacy H2H: `h2h.csv`
+  - Reports (if generated): `reports/`

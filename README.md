@@ -33,12 +33,29 @@ The tool requires Python 3.9+ and the following packages:
 
 ## Usage
 
+### Data Layout
+
+Clean, canonical outputs are organized by season under `data/seasons/<year>/`:
+
+- 2019+ full boxscores: `data/seasons/<year>/boxscores.csv`
+- Pre‑2019 H2H only: `data/seasons/<year>/h2h.csv`
+- Optional weekly H2H: `data/seasons/<year>/weeks/<N>/h2h.csv`
+- Draft results: `data/seasons/<year>/draft.csv`
+- Any validation reports (if generated): `data/seasons/<year>/reports/`
+
+The vibe helpers write to these locations by default and overwrite existing files to avoid clutter.
+
 ### Export Boxscores
 
 #### Public League (No Authentication Required)
 
 ```bash
-rffl-bs export --league 323196 --year 2024
+# Raw CLI
+rffl-bs export --league 323196 --year 2024 --fill-missing-slots --out data/seasons/2024/boxscores.csv
+
+# Recommended via vibe helper (auto-validates and overwrites clean file)
+source ./vibe.sh
+bs 2024
 ```
 
 #### Private League (Cookie Authentication Required)
@@ -62,7 +79,7 @@ rffl-bs export --league 323196 --year 2023 --espn-s2 "your_cookie" --swid "your_
 rffl-bs export --league 323196 --year 2024 --out "my_boxscores.csv"
 
 # Export specific weeks
-rffl-bs export --league 323196 --year 2024 --start-week 1 --end-week 10
+rffl-bs export --league 323196 --year 2024 --start-week 1 --end-week 10 --fill-missing-slots --out data/seasons/2024/boxscores.csv
 ```
 
 ### Export H2H Results (pre‑2019 friendly)
@@ -71,16 +88,30 @@ For older seasons (pre‑2019) where ESPN’s per‑player boxscores may be inco
 
 ```bash
 # Full season H2H results
-rffl-bs h2h --league 323196 --year 2018
+rffl-bs h2h --league 323196 --year 2018 --out data/seasons/2018/h2h.csv
 
 # Specific week range
-rffl-bs h2h --league 323196 --year 2018 --start-week 1 --end-week 13
+rffl-bs h2h --league 323196 --year 2018 --start-week 1 --end-week 13 --out data/seasons/2018/h2h.csv
 
 # Custom output filename
-rffl-bs h2h --league 323196 --year 2018 --out h2h_2018.csv
+source ./vibe.sh
+h2h 2018
 ```
 
 Output columns: `week, matchup, home_team, away_team, home_score, away_score, winner, margin`.
+
+### Export Draft Results
+
+Export draft results (snake or auction) to the canonical location:
+
+```bash
+# Raw CLI
+rffl-bs draft --league 323196 --year 2024 --out data/seasons/2024/draft.csv
+
+# Recommended via vibe helper
+source ./vibe.sh
+draft 2024
+```
 
 ### Validate Exported Data
 
@@ -176,11 +207,12 @@ For private leagues, you need to obtain ESPN authentication cookies:
 ### Complete Workflow
 
 ```bash
-# 1. Export current season data
-rffl-bs export --league 323196 --year 2024
+# 1. Export current season data (clean, canonical location)
+source ./vibe.sh
+bs 2024
 
-# 2. Validate the export
-rffl-bs validate validated_boxscores_2024.csv
+# 2. Optional: additional validation on the produced file
+rffl-bs validate data/seasons/2024/boxscores.csv
 
 # 3. Check lineup compliance
 rffl-bs validate-lineup validated_boxscores_2024.csv
@@ -194,15 +226,14 @@ cat validated_boxscores_2024_lineup_validation_report.csv
 
 ```bash
 # Export multiple seasons
+source ./vibe.sh
 for year in 2022 2023 2024; do
-    rffl-bs export --league 323196 --year $year
-    rffl-bs validate validated_boxscores_$year.csv
-    rffl-bs validate-lineup validated_boxscores_$year.csv
+  bs $year
 done
 
 # H2H for older seasons
 for year in 2016 2017 2018; do
-    rffl-bs h2h --league 323196 --year $year
+  h2h $year
 done
 ```
 

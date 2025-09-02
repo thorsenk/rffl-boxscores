@@ -7,35 +7,49 @@
 # Export season data
 bs() {
   # usage: bs <year> [start_week] [end_week] [out_path]
+  # Writes to data/seasons/<year>/boxscores.csv by default, enforces clean output.
   local year=$1
   local start_week=$2
   local end_week=$3
-  local out_path=$4
-  
-  local cmd="rffl-bs export --league ${LEAGUE:?set LEAGUE or source .env} --year $year"
-  
+  local out_path=${4:-"data/seasons/${year}/boxscores.csv"}
+
+  mkdir -p "$(dirname "$out_path")"
+
+  local cmd="rffl-bs export --league ${LEAGUE:?set LEAGUE or source .env} --year $year --fill-missing-slots --require-clean --out $out_path"
+
   [ -n "$start_week" ] && [ "$start_week" -gt 0 ] && cmd="$cmd --start-week $start_week"
   [ -n "$end_week" ] && [ "$end_week" -gt 0 ] && cmd="$cmd --end-week $end_week"
-  [ -n "$out_path" ] && cmd="$cmd --out $out_path"
-  
+
   eval $cmd
 }
 
 # Export simplified head-to-head results (pre-2019 friendly)
 h2h() {
   # usage: h2h <year> [start_week] [end_week] [out_path]
+  # Writes to data/seasons/<year>/h2h.csv by default.
   local year=${1:?year}
   local start_week=$2
   local end_week=$3
-  local out_path=$4
+  local out_path=${4:-"data/seasons/${year}/h2h.csv"}
 
-  local cmd="rffl-bs h2h --league ${LEAGUE:?set LEAGUE or source .env} --year $year"
+  mkdir -p "$(dirname "$out_path")"
+
+  local cmd="rffl-bs h2h --league ${LEAGUE:?set LEAGUE or source .env} --year $year --out $out_path"
 
   [ -n "$start_week" ] && [ "$start_week" -gt 0 ] && cmd="$cmd --start-week $start_week"
   [ -n "$end_week" ] && [ "$end_week" -gt 0 ] && cmd="$cmd --end-week $end_week"
-  [ -n "$out_path" ] && cmd="$cmd --out $out_path"
 
   eval $cmd
+}
+
+# Export season draft results (snake/auction)
+draft() {
+  # usage: draft <year> [out_path]
+  local year=${1:?year}
+  local out_path=${2:-"data/seasons/${year}/draft.csv"}
+
+  mkdir -p "$(dirname "$out_path")"
+  rffl-bs draft --league "${LEAGUE:?set LEAGUE or source .env}" --year "$year" --out "$out_path"
 }
 
 # Validate a season file

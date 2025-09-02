@@ -206,6 +206,8 @@ def _export(
     end_week: int | None,
     out_path: str,
     fill_missing_slots: bool = False,
+    require_clean: bool = False,
+    tolerance: float = 0.0,
 ) -> str:
     try:
         lg = League(league_id=league_id, year=year, espn_s2=espn_s2, swid=swid)
@@ -296,10 +298,33 @@ def _export(
             f"Failed while fetching box scores. Consider checking weeks or cookies. Error: {e}"
         ) from e
 
+    df = pd.DataFrame([asdict(r) for r in rows])
+
+    # Optional: enforce cleanliness before writing
+    if require_clean:
+        starters = df[df["slot_type"] == "starters"].copy()
+        agg = starters.groupby(["week", "matchup", "team_abbrev"], as_index=False).agg(
+            team_proj_total=("team_proj_total", "first"),
+            team_actual_total=("team_actual_total", "first"),
+            starters_proj_sum=("projected_points", "sum"),
+            starters_actual_sum=("actual_points", "sum"),
+            starter_count=("slot", "count"),
+        )
+        agg["proj_diff"] = (agg["starters_proj_sum"] - agg["team_proj_total"]).round(2)
+        agg["act_diff"] = (agg["starters_actual_sum"] - agg["team_actual_total"]).round(2)
+
+        bad_proj = agg[agg["proj_diff"].abs() > tolerance]
+        bad_act = agg[agg["act_diff"].abs() > tolerance]
+        bad_cnt = agg[agg["starter_count"] != 9]
+
+        if not bad_proj.empty or not bad_act.empty or not bad_cnt.empty:
+            raise RuntimeError(
+                f"Export not clean: proj_mismatches={len(bad_proj)}, actual_mismatches={len(bad_act)}, starter_count!=9={len(bad_cnt)}. "
+                f"Consider --fill-missing-slots or adjust tolerance."
+            )
+
     out = out_path or f"validated_boxscores_{year}.csv"
-    pd.DataFrame([asdict(r) for r in rows]).to_csv(
-        out, index=False, quoting=csv.QUOTE_MINIMAL
-    )
+    df.to_csv(out, index=False, quoting=csv.QUOTE_MINIMAL)
     return out
 
 
@@ -410,6 +435,13 @@ def cmd_export(
         False,
         help="Insert 0-pt placeholders for missing required starter slots",
     ),
+    require_clean: bool = typer.Option(
+        False,
+        help="Validate in-memory and fail if sums/counts are not clean",
+    ),
+    tolerance: float = typer.Option(
+        0.0, help="Allowed |proj_sum - team_proj_total| for --require-clean"
+    ),
 ):
     """Export ESPN fantasy football boxscores to CSV format."""
     league_id = league
@@ -431,9 +463,113 @@ def cmd_export(
             end_week=end_week,
             out_path=out or f"validated_boxscores_{year}.csv",
             fill_missing_slots=fill_missing_slots,
+            require_clean=require_clean,
+            tolerance=tolerance,
         )
     except Exception as e:
         typer.echo(f"❌ Export failed: {e}")
+        raise typer.Exit(1)
+
+    typer.echo(f"✅ Wrote {path}")
+
+
+@dataclass
+class DraftRow:
+    year: int
+    round: int | None
+    round_pick: int | None
+    team_abbrev: str
+    player_id: int | None
+    player_name: str
+    bid_amount: float | None
+    keeper: bool | None
+    nominating_team: str | None
+
+
+def _export_draft(
+    league_id: int,
+    year: int,
+    espn_s2: str | None,
+    swid: str | None,
+    out_path: str | None,
+) -> str:
+    try:
+        lg = League(league_id=league_id, year=year, espn_s2=espn_s2, swid=swid)
+    except Exception as e:
+        raise RuntimeError(
+            f"Failed to initialize ESPN League (league={league_id}, year={year}). "
+            f"Check LEAGUE/ESPN_S2/SWID and network. Error: {e}"
+        ) from e
+
+    # Ensure player map exists so picks can have names
+    try:
+        lg.refresh_draft(refresh_players=True)
+    except Exception as e:
+        raise RuntimeError(f"Failed to fetch draft details: {e}") from e
+
+    rows: List[DraftRow] = []
+    for p in getattr(lg, "draft", []) or []:
+        team_abbrev = _get_team_abbrev(getattr(p, "team", None))
+        nom_team = _get_team_abbrev(getattr(p, "nominatingTeam", None)) if getattr(p, "nominatingTeam", None) else None
+        rows.append(
+            DraftRow(
+                year=year,
+                round=getattr(p, "round_num", None),
+                round_pick=getattr(p, "round_pick", None),
+                team_abbrev=team_abbrev,
+                player_id=getattr(p, "playerId", None),
+                player_name=(getattr(p, "playerName", None) or ""),
+                bid_amount=(float(p.bid_amount) if getattr(p, "bid_amount", None) is not None else None),
+                keeper=getattr(p, "keeper_status", None),
+                nominating_team=nom_team,
+            )
+        )
+
+    out = out_path or f"draft_{year}.csv"
+    pd.DataFrame([asdict(r) for r in rows]).to_csv(
+        out, index=False, quoting=csv.QUOTE_MINIMAL
+    )
+    return out
+
+
+@app.command("draft")
+def cmd_draft(
+    league: int | None = typer.Option(None, help="ESPN leagueId (defaults to $LEAGUE)"),
+    year: int = typer.Option(..., help="Season year"),
+    out: str = typer.Option(None, help="Output CSV path (default data/seasons/<year>/draft.csv)"),
+    espn_s2: str = typer.Option(
+        None, help="Cookie (private leagues). Falls back to $ESPN_S2"
+    ),
+    swid: str = typer.Option(
+        None, help="Cookie (private leagues). Falls back to $SWID"
+    ),
+):
+    """Export season draft results to CSV (snake or auction)."""
+    league_id = league
+    if league_id is None:
+        env_league = os.getenv("LEAGUE")
+        if env_league and env_league.isdigit():
+            league_id = int(env_league)
+    if league_id is None:
+        typer.echo("❌ Missing league id. Pass --league or set $LEAGUE in .env")
+        raise typer.Exit(1)
+
+    default_out = out or os.path.join("data", "seasons", str(year), "draft.csv")
+    try:
+        os.makedirs(os.path.dirname(default_out), exist_ok=True)
+    except Exception:
+        pass
+
+    try:
+        path = _export_draft(
+            league_id=league_id,
+            year=year,
+            espn_s2=espn_s2 or os.getenv("ESPN_S2"),
+            swid=swid or os.getenv("SWID"),
+            out_path=default_out,
+        )
+    except Exception as e:
+        typer.echo(f"❌ Draft export failed: {e}")
         raise typer.Exit(1)
 
     typer.echo(f"✅ Wrote {path}")
