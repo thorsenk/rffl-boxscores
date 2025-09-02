@@ -205,6 +205,7 @@ def _export(
     start_week: int | None,
     end_week: int | None,
     out_path: str,
+    fill_missing_slots: bool = False,
 ) -> str:
     try:
         lg = League(league_id=league_id, year=year, espn_s2=espn_s2, swid=swid)
@@ -250,6 +251,32 @@ def _export(
                         if row["slot_type"] == "starters":
                             starters.append(row)
 
+                    # Optionally fill missing required starter slots with 0-pt placeholders
+                    if fill_missing_slots:
+                        # Count current starters by slot
+                        have_counts = {}
+                        for r in starters:
+                            have_counts[r["slot"]] = have_counts.get(r["slot"], 0) + 1
+
+                        for req_slot, req_count in RFFL_LINEUP_REQUIREMENTS.items():
+                            have = have_counts.get(req_slot, 0)
+                            missing = max(0, req_count - have)
+                            for i in range(missing):
+                                placeholder = {
+                                    "slot": req_slot,
+                                    "slot_type": "starters",
+                                    "player_name": f"EMPTY SLOT - {req_slot}",
+                                    # Choose a FLEX-eligible position for FLEX placeholder to avoid validation noise
+                                    "position": (req_slot if req_slot != "FLEX" else "WR"),
+                                    "injured": None,
+                                    "injury_status": "EMPTY",
+                                    "bye_week": None,
+                                    "projected_points": 0.0,
+                                    "actual_points": 0.0,
+                                }
+                                starters.append(placeholder)
+                                stamped.append(placeholder)
+
                     team_proj = round(sum(r["projected_points"] for r in starters), 2)
                     team_act = round(sum(r["actual_points"] for r in starters), 2)
 
@@ -289,6 +316,10 @@ def cmd_export(
     swid: str = typer.Option(
         None, help="Cookie (private leagues). Falls back to $SWID"
     ),
+    fill_missing_slots: bool = typer.Option(
+        False,
+        help="Insert 0-pt placeholders for missing required starter slots",
+    ),
 ):
     """Export ESPN fantasy football boxscores to CSV format."""
     league_id = league
@@ -309,6 +340,7 @@ def cmd_export(
             start_week=start_week,
             end_week=end_week,
             out_path=out or f"validated_boxscores_{year}.csv",
+            fill_missing_slots=fill_missing_slots,
         )
     except Exception as e:
         typer.echo(f"❌ Export failed: {e}")

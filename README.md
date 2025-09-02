@@ -9,6 +9,7 @@ A clean ESPN fantasy football boxscore exporter and validator CLI tool.
 - **Validate Lineup**: Check RFFL lineup compliance (1 QB, 2 RB, 2 WR, 1 TE, 1 FLEX, 1 D/ST, 1 K)
 - **Clean Data**: Normalized slot positions, injury status, and bye week information
 - **Flexible**: Support for public and private leagues with cookie authentication
+ - **Design Notes**: See `RFFL.md` for Enhanced Matchup Box Scores logic (normalization, rounding, validations, and the `--fill-missing-slots` option).
 
 ## Installation
 
