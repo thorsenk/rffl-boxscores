@@ -21,6 +21,23 @@ bs() {
   eval $cmd
 }
 
+# Export simplified head-to-head results (pre-2019 friendly)
+h2h() {
+  # usage: h2h <year> [start_week] [end_week] [out_path]
+  local year=${1:?year}
+  local start_week=$2
+  local end_week=$3
+  local out_path=$4
+
+  local cmd="rffl-bs h2h --league ${LEAGUE:?set LEAGUE or source .env} --year $year"
+
+  [ -n "$start_week" ] && [ "$start_week" -gt 0 ] && cmd="$cmd --start-week $start_week"
+  [ -n "$end_week" ] && [ "$end_week" -gt 0 ] && cmd="$cmd --end-week $end_week"
+  [ -n "$out_path" ] && cmd="$cmd --out $out_path"
+
+  eval $cmd
+}
+
 # Validate a season file
 bsv() {
   # usage: bsv <year>

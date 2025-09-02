@@ -65,6 +65,23 @@ rffl-bs export --league 323196 --year 2024 --out "my_boxscores.csv"
 rffl-bs export --league 323196 --year 2024 --start-week 1 --end-week 10
 ```
 
+### Export H2H Results (pre‑2019 friendly)
+
+For older seasons (pre‑2019) where ESPN’s per‑player boxscores may be incomplete, export simplified head‑to‑head matchup results:
+
+```bash
+# Full season H2H results
+rffl-bs h2h --league 323196 --year 2018
+
+# Specific week range
+rffl-bs h2h --league 323196 --year 2018 --start-week 1 --end-week 13
+
+# Custom output filename
+rffl-bs h2h --league 323196 --year 2018 --out h2h_2018.csv
+```
+
+Output columns: `week, matchup, home_team, away_team, home_score, away_score, winner, margin`.
+
 ### Validate Exported Data
 
 ```bash
@@ -181,6 +198,11 @@ for year in 2022 2023 2024; do
     rffl-bs export --league 323196 --year $year
     rffl-bs validate validated_boxscores_$year.csv
     rffl-bs validate-lineup validated_boxscores_$year.csv
+done
+
+# H2H for older seasons
+for year in 2016 2017 2018; do
+    rffl-bs h2h --league 323196 --year $year
 done
 ```
 

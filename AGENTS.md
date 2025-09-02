@@ -12,6 +12,8 @@ CLI Commands
 - `rffl-bs --help`: show main help.
 - `rffl-bs export --league <id> --year <year> [--start-week N] [--end-week N] [--out PATH] [--espn-s2 S2] [--swid SWID] [--fill-missing-slots]`
   Export season boxscores to CSV (`validated_boxscores_<year>.csv` by default). Use `--fill-missing-slots` to insert 0‑pt placeholders for missing required starters (see Enhanced Matchup Box Scores below).
+- `rffl-bs h2h --league <id> --year <year> [--start-week N] [--end-week N] [--out PATH] [--espn-s2 S2] [--swid SWID]`
+  Export simplified head‑to‑head matchup results to CSV (`h2h_<year>.csv` by default). Columns: week, matchup, home_team, away_team, home_score, away_score, winner, margin. Compatible with older seasons (pre‑2019) where per‑player boxscores aren’t reliable.
 - `rffl-bs validate <csv> [--tolerance FLOAT]`
   Validate sums and starter counts; writes `<csv>_validation_report.csv` on issues.
 - `rffl-bs validate-lineup <csv> [--out PATH]`
@@ -25,6 +27,7 @@ Enhanced Matchup Box Scores
 
 Vibe Helpers (source `./vibe.sh`)
 - `bs <year> [start] [end] [out]`: export using `$LEAGUE`.
+- `h2h <year> [start] [end] [out]`: export simplified H2H results using `$LEAGUE`.
 - `bsv <year>`: validate `validated_boxscores_<year>.csv`.
 - `bsl <year>`: lineup validation for `validated_boxscores_<year>.csv`.
 - `bsp <year>`: export weeks 15–17 (playoffs helper).

@@ -56,6 +56,12 @@ def main():
     print("=" * 60)
     run_command(["rffl-bs", "validate", "--help"], "Show validate command help")
 
+    # Example 3b: Show h2h help
+    print("\n" + "=" * 60)
+    print("EXAMPLE 3b: Show h2h command help")
+    print("=" * 60)
+    run_command(["rffl-bs", "h2h", "--help"], "Show h2h command help")
+
     # Example 4: Try to export (will fail without valid league, but shows usage)
     print("\n" + "=" * 60)
     print("EXAMPLE 4: Attempt export (will fail but shows usage)")
@@ -92,6 +98,8 @@ def main():
     print("1. rffl-bs export --league <league_id> --year 2024")
     print("2. rffl-bs validate validated_boxscores_2024.csv")
     print("3. Check for validation report if issues found")
+    print("\nPre-2019 seasons (simplified results):")
+    print("1. rffl-bs h2h --league <league_id> --year 2018")
 
     print("\n" + "=" * 60)
     print("🎯 Ready to use!")

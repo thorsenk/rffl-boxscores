@@ -303,6 +303,96 @@ def _export(
     return out
 
 
+@dataclass
+class H2HRow:
+    week: int
+    matchup: int
+    home_team: str
+    away_team: str
+    home_score: float
+    away_score: float
+    winner: str  # home_team, away_team, or TIE
+    margin: float
+
+
+def _export_h2h(
+    league_id: int,
+    year: int,
+    espn_s2: str | None,
+    swid: str | None,
+    start_week: int | None,
+    end_week: int | None,
+    out_path: str | None,
+) -> str:
+    """Export simplified head-to-head matchup results for a season.
+
+    This uses per-matchup team scores from ESPN (no per-player lineups),
+    which is more stable for older seasons (pre-2019).
+    """
+    try:
+        lg = League(league_id=league_id, year=year, espn_s2=espn_s2, swid=swid)
+    except Exception as e:
+        raise RuntimeError(
+            f"Failed to initialize ESPN League (league={league_id}, year={year}). "
+            f"Check LEAGUE/ESPN_S2/SWID and network. Error: {e}"
+        ) from e
+
+    rows: List[H2HRow] = []
+
+    # Iterate via scoreboard to support pre-2019 seasons
+    lo = start_week or 1
+    hi = end_week or 18
+    try:
+        for week in range(lo, hi + 1):
+            try:
+                matchups = lg.scoreboard(week)
+            except Exception as e:
+                # Skip weeks that cannot be fetched
+                continue
+            if not matchups:
+                continue
+            for m_idx, mu in enumerate(matchups, start=1):
+                home_t = getattr(mu, "home_team", None)
+                away_t = getattr(mu, "away_team", None)
+                home_score = round(_f(getattr(mu, "home_score", None), 0.0), 2)
+                away_score = round(_f(getattr(mu, "away_score", None), 0.0), 2)
+
+                home_abbrev = _get_team_abbrev(home_t) if home_t else "HOME"
+                away_abbrev = _get_team_abbrev(away_t) if away_t else "AWAY"
+
+                if home_score > away_score:
+                    winner = home_abbrev
+                elif away_score > home_score:
+                    winner = away_abbrev
+                else:
+                    winner = "TIE"
+
+                margin = round(abs(home_score - away_score), 2)
+
+                rows.append(
+                    H2HRow(
+                        week=week,
+                        matchup=m_idx,
+                        home_team=home_abbrev,
+                        away_team=away_abbrev,
+                        home_score=home_score,
+                        away_score=away_score,
+                        winner=winner,
+                        margin=margin,
+                    )
+                )
+    except Exception as e:
+        raise RuntimeError(
+            f"Failed while fetching matchup results. Consider checking weeks or cookies. Error: {e}"
+        ) from e
+
+    out = out_path or f"h2h_{year}.csv"
+    pd.DataFrame([asdict(r) for r in rows]).to_csv(
+        out, index=False, quoting=csv.QUOTE_MINIMAL
+    )
+    return out
+
+
 @app.command("export")
 def cmd_export(
     league: int | None = typer.Option(None, help="ESPN leagueId (defaults to $LEAGUE)"),
@@ -348,6 +438,50 @@ def cmd_export(
 
     typer.echo(f"✅ Wrote {path}")
 
+
+@app.command("h2h")
+def cmd_h2h(
+    league: int | None = typer.Option(None, help="ESPN leagueId (defaults to $LEAGUE)"),
+    year: int = typer.Option(..., help="Season year"),
+    out: str = typer.Option(None, help="Output CSV path (default h2h_<year>.csv)"),
+    start_week: int = typer.Option(None, help="Start week (default auto)"),
+    end_week: int = typer.Option(None, help="End week (default auto)"),
+    espn_s2: str = typer.Option(
+        None, help="Cookie (private leagues). Falls back to $ESPN_S2"
+    ),
+    swid: str = typer.Option(
+        None, help="Cookie (private leagues). Falls back to $SWID"
+    ),
+):
+    """Export simplified head-to-head matchup results to CSV.
+
+    Columns: week, matchup, home_team, away_team, home_score, away_score, winner, margin.
+    Suitable for older seasons where per-player boxscores are unavailable.
+    """
+    league_id = league
+    if league_id is None:
+        env_league = os.getenv("LEAGUE")
+        if env_league and env_league.isdigit():
+            league_id = int(env_league)
+    if league_id is None:
+        typer.echo("❌ Missing league id. Pass --league or set $LEAGUE in .env")
+        raise typer.Exit(1)
+
+    try:
+        path = _export_h2h(
+            league_id=league_id,
+            year=year,
+            espn_s2=espn_s2 or os.getenv("ESPN_S2"),
+            swid=swid or os.getenv("SWID"),
+            start_week=start_week,
+            end_week=end_week,
+            out_path=out or f"h2h_{year}.csv",
+        )
+    except Exception as e:
+        typer.echo(f"❌ H2H export failed: {e}")
+        raise typer.Exit(1)
+
+    typer.echo(f"✅ Wrote {path}")
 
 @app.command("validate")
 def cmd_validate(

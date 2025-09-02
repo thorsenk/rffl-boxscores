@@ -135,3 +135,6 @@ rffl-bs validate-lineup validated_boxscores_2019.csv
 - Env precedence: CLI flags > real environment > `.env` (dotenv is auto‑loaded).
 - Stable CSV column order and float rounding make outputs deterministic.
 
+## Simplified H2H (Legacy Seasons)
+
+For seasons before 2019, ESPN’s per‑player lineup data can be incomplete or inconsistent. Use the `rffl-bs h2h` command to export simplified head‑to‑head matchup results without per‑player rows. This produces one row per matchup with home/away teams, scores, winner, and margin, and is suitable for season‑level results and standings.
