@@ -58,6 +58,32 @@ Starters vs Bench:
 Team Abbreviation:
 - Best effort across ESPN team attrs: `abbrev`, `team_abbrev`, `abbreviation`, `team_id`, `name`.
 
+## Canonicals + Aliases
+
+To maintain a stable historical identity for teams (despite abbrev/name changes), use:
+- `data/teams/canonical_teams.csv`: per-year canonical team_code, full name, and ownership info.
+- `data/teams/alias_mapping.yaml`: master alias → canonical mapping with optional year bounds.
+
+Normalize season CSVs to add canonical codes:
+- H2H: adds `home_code`, `away_code`, `winner_code` based on aliases.
+- Draft/Boxscores: adds `team_code` alongside source `team_abbrev`.
+
+Scripts:
+- `scripts/apply_alias_mapping.py --file <csv> --year <YYYY> --out <path>`
+  Applies `alias_mapping.yaml` to one CSV, writing normalized output.
+
+Example:
+```bash
+python3 scripts/apply_alias_mapping.py \
+  --file data/seasons/2011/h2h.csv \
+  --year 2011 \
+  --out data/seasons/2011/reports/h2h_normalized.csv
+```
+
+Notes:
+- Extend `alias_mapping.yaml` as teams rebrand or abbreviations vary by source/season.
+- Keep `canonical_teams.csv` authoritative for the team_code set per season.
+
 ## RFFL Lineup Requirements
 
 Required starters per team‑week (total 9):
@@ -138,3 +164,23 @@ rffl-bs validate-lineup validated_boxscores_2019.csv
 ## Simplified H2H (Legacy Seasons)
 
 For seasons before 2019, ESPN’s per‑player lineup data can be incomplete or inconsistent. Use the `rffl-bs h2h` command to export simplified head‑to‑head matchup results without per‑player rows. This produces one row per matchup with home/away teams, scores, winner, and margin, and is suitable for season‑level results and standings.
+
+## Draft Exports
+
+Two draft outputs are supported when normalizing historical data:
+
+- Draft Corrected Canonicals (per season): `data/seasons/<year>/reports/<year>-Draft-Correct-Canonicals.csv`
+  - Schema: year, round, round_pick, team_abbrev (source), player_id, player_name, keeper, team_code, team_full_name, is_co_owned, owner_code_1, owner_code_2
+  - Notes: retains ESPN’s `team_abbrev` for traceability; canonical `team_code` is authoritative.
+
+- Draft Snake Canonicals (per season): `data/seasons/<year>/reports/<year>-Draft-Snake-Canonicals.csv`
+  - Schema: year, round, round_pick, overall_pick, team_code, team_full_name, is_co_owned, owner_code_1, owner_code_2, player_id, player_name, player_NFL_team, player_position, is_a_keeper?
+  - Notes: optimized for analysis; no auction fields. `overall_pick = (round-1)*teams + round_pick`.
+
+### Ownership Columns
+
+- `owner_code_1`: primary owner code
+- `owner_code_2`: secondary owner code (if co‑owned)
+- `is_co_owned`: Yes/No convenience flag
+
+These names are canonical across all generated CSVs. If legacy columns exist (e.g., `owner_code`, `owner_code (CO-OWNER)`), generators backfill them for compatibility but do not rely on them.
