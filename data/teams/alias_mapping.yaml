@@ -1,0 +1,130 @@
+version: 1
+notes: |-
+  RFFL master alias mapping.
+  - Map historical/alternate team codes (alias) to canonical team_code.
+  - You can scope aliases by start_year/end_year; omit for always-on mapping.
+  - Keep this additive over time as codes change.
+aliases:
+  # 2011 canonical codes per canonical_teams.csv
+  - alias: BBRS
+    canonical: BALL
+    start_year: 2011
+    notes: Blue Ballers old code
+  - alias: MJI
+    canonical: MRYJ
+    start_year: 2011
+    notes: Mary Jane old code
+  - alias: DKGG
+    canonical: DKEG
+    start_year: 2011
+    notes: Da Keggers old code
+  - alias: AC
+    canonical: CHLK
+    start_year: 2011
+    notes: Alpha Chalkers old code
+  - alias: KNAB
+    canonical: JACK
+    start_year: 2011
+    notes: Jackson Pines old code
+  - alias: GOW
+    canonical: JAGB
+    start_year: 2011
+    notes: Jag Bombers old code
+  - alias: PTB
+    canonical: PITB
+    start_year: 2011
+    notes: Raging Pitbulls old code
+  - alias: SWEE
+    canonical: SSS
+    start_year: 2011
+    notes: Sweet's Special Sauce old code
+  - alias: COCK
+    canonical: PCX
+    start_year: 2011
+    notes: Drew Peacocks old code (Peacocks)
+  - alias: 2SCM
+    canonical: 2SCM
+    start_year: 2011
+  - alias: BBWZ
+    canonical: BBWZ
+    start_year: 2011
+  - alias: GFM
+    canonical: GFM
+    start_year: 2011
+  # Additional variants across seasons
+  - alias: ACHK
+    canonical: CHLK
+    start_year: 2013
+    notes: Alpha Chalkers variant
+  - alias: GRFM
+    canonical: GFM
+    start_year: 2013
+    end_year: 2015
+    notes: Great Fantasy Minds variant
+  - alias: WTWZ
+    canonical: WZRD
+    start_year: 2013
+    end_year: 2015
+    notes: White Wizards variant
+  - alias: WWZ
+    canonical: WZRD
+    start_year: 2016
+    end_year: 2017
+    notes: White Wizards short variant
+  - alias: JGBM
+    canonical: JAGB
+    start_year: 2013
+    end_year: 2015
+    notes: Jag Bombers variant
+  - alias: MXBN
+    canonical: MXLB
+    start_year: 2013
+    end_year: 2017
+    notes: Mex-Banese variant
+  - alias: PTBS
+    canonical: PITB
+    start_year: 2013
+    end_year: 2014
+    notes: Pitbulls variant
+  - alias: LNDS
+    canonical: LNO
+    start_year: 2013
+    end_year: 2015
+    notes: Least Needlish Ones variant
+  - alias: JAG
+    canonical: JAGB
+    start_year: 2016
+    end_year: 2019
+    notes: ESPN shortened Jag Bombers
+  - alias: SBB
+    canonical: SSBB
+    start_year: 2019
+    notes: SS Bobber Bandits ESPN variant
+  - alias: DPCX
+    canonical: PCX
+    start_year: 2015
+    end_year: 2017
+    notes: Peacocks variant in some exports
+  - alias: BNSM
+    canonical: LNO
+    start_year: 2021
+    end_year: 2021
+    notes: ESPN 2021 abbreviation for Least Needlish Ones
+  - alias: AWAY
+    canonical: AWAY
+    notes: Synthetic placeholder for legacy H2H; not a real team
+  - alias: mji
+    canonical: MRYJ
+    start_year: 2012
+    end_year: 2012
+    notes: Lowercase ESPN variant for Mary Jane (2012)
+  - alias: FYOU
+    canonical: CHLK
+    start_year: 2014
+    end_year: 2015
+    notes: ESPN variant for Alpha Chalkers (2014-2015)
+  - alias: TFF
+    canonical: PKMC
+    start_year: 2022
+    end_year: 2022
+    notes: ESPN placeholder for PKMC Unhinged (2022)

@@ -1,0 +1,217 @@
+version: 1
+generated_at: 2025-09-03T14:26:15Z
+notes: |-
+  Canonical mapping scaffold.
+  - Each entry defaults to identity.
+  - To merge historical variants, pick a canonical abbrev and move others into its aliases list.
+  - Keep years/sources lists to help validate coverage.
+teams:
+  - canonical: 2SCM
+    aliases: [2SCM]
+    name: 2-Step Church Mice
+    years: [2011, 2012]
+    sources: [draft, h2h]
+  - canonical: AC
+    aliases: [AC]
+    name: Alpha Chalkers
+    years: [2011, 2012]
+    sources: [draft, h2h]
+  - canonical: ACHK
+    aliases: [ACHK]
+    name: Alpha Chalkers
+    years: [2013]
+    sources: [draft, h2h]
+  - canonical: AWAY
+    aliases: [AWAY]
+    years: [2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018]
+    sources: [h2h]
+  - canonical: BBRS
+    aliases: [BBRS]
+    name: Blue Ballers
+    years: [2011, 2012]
+    sources: [draft, h2h]
+  - canonical: BBWZ
+    aliases: [BBWZ]
+    name: Brimball Wizards
+    years: [2011, 2012]
+    sources: [draft, h2h]
+  - canonical: BNSM
+    aliases: [BNSM]
+    name: 3 Benais Smileys
+    years: [2021]
+    sources: [boxscores, draft]
+  - canonical: BRIM
+    aliases: [BRIM]
+    name: Brimstone Bohemians
+    years: [2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024]
+    sources: [boxscores, draft, h2h]
+  - canonical: CHLK
+    aliases: [CHLK]
+    name: Alpha Chalkers
+    years: [2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024]
+    sources: [boxscores, draft, h2h]
+  - canonical: COCK
+    aliases: [COCK]
+    name: #2 Drew Peacocks
+    years: [2011, 2012, 2013, 2014]
+    sources: [draft, h2h]
+  - canonical: DKEG
+    aliases: [DKEG]
+    name: 8 Da Keggers
+    years: [2020]
+    sources: [boxscores, draft]
+  - canonical: DKGG
+    aliases: [DKGG]
+    name: 7 Da Keggers
+    years: [2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019]
+    sources: [boxscores, draft, h2h]
+  - canonical: DPCX
+    aliases: [DPCX]
+    name: 3 Drew Peacocks
+    years: [2015, 2016, 2017]
+    sources: [draft, h2h]
+  - canonical: FYOU
+    aliases: [FYOU]
+    name: 10 Alpha Chalkers
+    years: [2014, 2015]
+    sources: [draft, h2h]
+  - canonical: GFM
+    aliases: [GFM]
+    name: Great Fantasy Minds
+    years: [2011, 2012, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024]
+    sources: [boxscores, draft, h2h]
+  - canonical: GOW
+    aliases: [GOW]
+    name: Jagbombers !!
+    years: [2011, 2012]
+    sources: [draft, h2h]
+  - canonical: GRFM
+    aliases: [GRFM]
+    name: 1 Great Fantasy Minds
+    years: [2013, 2014, 2015]
+    sources: [draft, h2h]
+  - canonical: JAG
+    aliases: [JAG]
+    name: 2 Jag Bombers
+    years: [2016, 2017, 2018, 2019]
+    sources: [boxscores, draft, h2h]
+  - canonical: JAGB
+    aliases: [JAGB]
+    name: Jag Bombers
+    years: [2020, 2021, 2022, 2023, 2024]
+    sources: [boxscores, draft]
+  - canonical: JGBM
+    aliases: [JGBM]
+    name: 12 Jag Bombers
+    years: [2013, 2014, 2015]
+    sources: [draft, h2h]
+  - canonical: KNAB
+    aliases: [KNAB]
+    name: Jackson Pines
+    years: [2011, 2012]
+    sources: [draft, h2h]
+  - canonical: LNDS
+    aliases: [LNDS]
+    name: 11 Least Needlish One's
+    years: [2013, 2014, 2015]
+    sources: [draft, h2h]
+  - canonical: LNO
+    aliases: [LNO]
+    name: Least Needlish Ones
+    years: [2016, 2017, 2018, 2019, 2020, 2022, 2023, 2024]
+    sources: [boxscores, draft, h2h]
+  - canonical: MJI
+    aliases: [MJI]
+    name: Mary Jane, Inc.
+    years: [2011]
+    sources: [draft, h2h]
+  - canonical: MRYJ
+    aliases: [MRYJ]
+    name: Mary Jane
+    years: [2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024]
+    sources: [boxscores, draft, h2h]
+  - canonical: MXBN
+    aliases: [MXBN]
+    name: 9 Mex Banese
+    years: [2013, 2014, 2015, 2016, 2017]
+    sources: [draft, h2h]
+  - canonical: MXLB
+    aliases: [MXLB]
+    name: Mex Banese
+    years: [2018, 2019, 2020, 2021, 2022, 2023, 2024]
+    sources: [boxscores, draft, h2h]
+  - canonical: PCX
+    aliases: [PCX]
+    name: Gypsy PCX
+    years: [2018, 2019, 2020, 2021, 2022, 2023, 2024]
+    sources: [boxscores, draft, h2h]
+  - canonical: PITB
+    aliases: [PITB]
+    name: 7 Raging Pitbulls
+    years: [2018, 2019, 2020, 2021]
+    sources: [boxscores, draft, h2h]
+  - canonical: PKMC
+    aliases: [PKMC]
+    name: PKMC Unhinged
+    years: [2023, 2024]
+    sources: [boxscores, draft]
+  - canonical: PTB
+    aliases: [PTB]
+    name: 7 Raging Pitbulls
+    years: [2011, 2012, 2016, 2017]
+    sources: [draft, h2h]
+  - canonical: PTBS
+    aliases: [PTBS]
+    name: 7 Raging Pitbulls
+    years: [2013, 2014, 2015]
+    sources: [draft, h2h]
+  - canonical: SBB
+    aliases: [SBB]
+    name: 12 Sauce  Boss Bandits
+    years: [2019, 2020]
+    sources: [boxscores, draft]
+  - canonical: SSBB
+    aliases: [SSBB]
+    name: SS Bobber Bandits
+    years: [2021, 2022, 2023, 2024]
+    sources: [boxscores, draft]
+  - canonical: SSS
+    aliases: [SSS]
+    name: 12 Sweet's Special Sauce
+    years: [2013, 2014, 2015, 2016, 2017, 2018]
+    sources: [draft, h2h]
+  - canonical: SWEE
+    aliases: [SWEE]
+    name: Sweet's Special Sauce
+    years: [2011, 2012]
+    sources: [draft, h2h]
+  - canonical: TACT
+    aliases: [TACT]
+    name: Tactical Tacticians
+    years: [2021, 2022, 2023, 2024]
+    sources: [boxscores, draft]
+  - canonical: TFF
+    aliases: [TFF]
+    name: 9 Teem Fontsy Foball
+    years: [2022]
+    sources: [boxscores, draft]
+  - canonical: WTWZ
+    aliases: [WTWZ]
+    name: 6 White Wizards
+    years: [2013, 2014, 2015]
+    sources: [draft, h2h]
+  - canonical: WWZ
+    aliases: [WWZ]
+    name: 11 White Wizards
+    years: [2016, 2017]
+    sources: [draft, h2h]
+  - canonical: WZRD
+    aliases: [WZRD]
+    name: White Wizards
+    years: [2018, 2019, 2020, 2021, 2022, 2023, 2024]
+    sources: [boxscores, draft, h2h]
+  - canonical: mji
+    aliases: [mji]
+    name: Mary Jane inc.
+    years: [2012]
+    sources: [draft, h2h]
