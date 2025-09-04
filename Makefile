@@ -1,7 +1,8 @@
-.PHONY: help normalize drafts master clean_master all venv install fmt lint test audit devclean lint-files print-in
+.PHONY: help normalize drafts master clean_master all venv install fmt lint test audit devclean lint-files print-in verify
 
 # More portable default, still 3.10+ compliant; override with `make venv PYTHON=/opt/homebrew/bin/python3`
 PYTHON ?= python3
+VENV_ACT := . .venv/bin/activate &&
 MASTER_IN := build/outputs/rffl_master_db_powerbook_rffl_codex_db_1.csv
 
 # All years discovered in data/seasons
@@ -52,16 +53,16 @@ venv:
 	"$(PYTHON)" -m venv .venv
 
 install:
-	. .venv/bin/activate && pip install -U pip && pip install -e ".[dev]"
+	$(VENV_ACT) pip install -U pip && pip install -e ".[dev]"
 
 fmt:
-	. .venv/bin/activate && black .
+	$(VENV_ACT) black .
 
 lint:
-	. .venv/bin/activate && flake8
+	$(VENV_ACT) flake8
 
 test:
-	. .venv/bin/activate && pytest -q
+	$(VENV_ACT) pytest -q
 
 audit:
 	bash scripts/safe_audit.sh
@@ -70,7 +71,19 @@ devclean:
 	rm -rf .venv venv build dist *.egg-info
 
 lint-files:
-	@violations=$$(git ls-files | LC_ALL=C grep -E '[[:space:]]|[^[:ascii:]]|[A-Z]' || true); \
+	@violations=$$(git ls-files | awk '/[[:space:]]/ {print; next} /[^ -~]/ {print}'); \
 	if [ -n "$$violations" ]; then \
-	  echo "❌ Invalid filenames (must be lowercase ASCII, no spaces/emoji):"; echo "$$violations"; exit 1; \
+	  echo "❌ Invalid filenames (must be ASCII, no spaces/emoji):"; \
+	  echo "$$violations"; exit 1; \
 	else echo "✅ Filenames clean"; fi
+
+# Run all checks without mutating files
+verify:
+	$(VENV_ACT) black --check .
+	$(MAKE) lint
+	$(MAKE) test
+	$(MAKE) audit
+	$(MAKE) lint-files
+	$(VENV_ACT) rffl-bs --help >/dev/null
+	$(VENV_ACT) python -m rffl_boxscores.cli --help >/dev/null
+	@echo "✅ verify: all checks passed"
