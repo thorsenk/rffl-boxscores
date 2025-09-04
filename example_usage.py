@@ -7,9 +7,6 @@ and shows common usage patterns.
 """
 
 import subprocess
-import os
-import sys
-from pathlib import Path
 
 
 def run_command(cmd, description):

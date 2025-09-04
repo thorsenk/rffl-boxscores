@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=61.0", "wheel"]
+requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -7,6 +7,9 @@ name = "rffl-boxscores"
 version = "0.1.0"
 description = "Clean ESPN fantasy boxscore exporter + validator"
 requires-python = ">=3.10"
+readme = "README.md"
+license = { file = "LICENSE" }
+authors = [{ name = "Kyle Thorsen" }]
 dependencies = [
     "espn_api>=0.39.1",
     "pandas>=2.2.0", 
@@ -27,7 +30,7 @@ dev = [
 
 [tool.black]
 line-length = 88
-target-version = ['py39']
+target-version = ["py310"]
 
 [tool.flake8]
 max-line-length = 88
@@ -45,3 +48,7 @@ exclude = [
     ".mypy_cache",
     ".pytest_cache",
 ]
+
+[tool.setuptools]
+packages = ["rffl_boxscores"]
+include-package-data = false

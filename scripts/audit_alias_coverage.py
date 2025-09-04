@@ -3,11 +3,15 @@ from __future__ import annotations
 
 import csv
 import os
-from typing import Dict, List, Set, Optional
+from typing import List, Set
+
+from apply_alias_mapping import (
+    load_aliases,
+    build_alias_index,
+    resolve_canonical,
+)  # type: ignore
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-from apply_alias_mapping import load_aliases, build_alias_index, resolve_canonical  # type: ignore
 
 
 def load_canonicals(year: int) -> Set[str]:
@@ -65,17 +69,21 @@ def main(year: int) -> int:
     for c in sorted(codes):
         can = resolve_canonical(c, year, idx)
         known = "yes" if (can in canon_set or can == "AWAY") else "no"
-        rows.append({
-            "raw_code": c,
-            "canonical": can,
-            "is_canonical_known": known,
-        })
+        rows.append(
+            {
+                "raw_code": c,
+                "canonical": can,
+                "is_canonical_known": known,
+            }
+        )
 
     outdir = os.path.join(ydir, "reports")
     os.makedirs(outdir, exist_ok=True)
     out = os.path.join(outdir, "alias_coverage.csv")
     with open(out, "w", newline="", encoding="utf-8") as f:
-        w = csv.DictWriter(f, fieldnames=["raw_code", "canonical", "is_canonical_known"])
+        w = csv.DictWriter(
+            f, fieldnames=["raw_code", "canonical", "is_canonical_known"]
+        )
         w.writeheader()
         w.writerows(rows)
     print(f"Wrote {out} ({len(rows)} codes)")
@@ -84,5 +92,6 @@ def main(year: int) -> int:
 
 if __name__ == "__main__":
     import sys
+
     y = int(sys.argv[1]) if len(sys.argv) > 1 else 0
     raise SystemExit(main(y))

@@ -1,4 +1,3 @@
-import math
 import pandas as pd
 
 from rffl_boxscores.cli import _norm_slot, _f, _validate_rffl_lineup

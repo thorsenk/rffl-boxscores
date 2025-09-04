@@ -6,11 +6,16 @@ import csv
 import os
 from typing import Dict, List, Tuple, Optional
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
 # Reuse helpers from apply_alias_mapping
-from apply_alias_mapping import load_aliases, build_alias_index, resolve_canonical, load_canonical_map  # type: ignore
+from apply_alias_mapping import (
+    load_aliases,
+    build_alias_index,
+    resolve_canonical,
+    load_canonical_map,
+)  # type: ignore
 from espn_api.football import League  # type: ignore
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 def read_csv(path: str) -> List[dict]:
@@ -26,7 +31,9 @@ def write_csv(path: str, rows: List[dict], fieldnames: List[str]) -> None:
         w.writerows(rows)
 
 
-def count_teams_for_year(canon_meta: Dict[Tuple[int, str], Dict[str, str]], year: int) -> int:
+def count_teams_for_year(
+    canon_meta: Dict[Tuple[int, str], Dict[str, str]], year: int
+) -> int:
     return len({code for (y, code) in canon_meta.keys() if y == year})
 
 
@@ -38,7 +45,7 @@ def _load_env() -> Tuple[int, Optional[str], Optional[str]]:
             if not line or line.startswith("#"):
                 continue
             if line.startswith("export "):
-                line = line[len("export "):]
+                line = line[len("export ") :]
             if "=" in line:
                 k, v = line.split("=", 1)
                 v = v.strip().strip('"').strip("'")
@@ -73,7 +80,9 @@ def _player_meta_for_ids(year: int, ids: List[int]) -> Dict[int, Tuple[str, str]
     return meta
 
 
-def make_snake(year: int, mapping_path: str, out_path: str, max_rounds: Optional[int] = None) -> Tuple[int, str]:
+def make_snake(
+    year: int, mapping_path: str, out_path: str, max_rounds: Optional[int] = None
+) -> Tuple[int, str]:
     draft_path = os.path.join(ROOT, "data", "seasons", str(year), "draft.csv")
     if not os.path.exists(draft_path):
         raise FileNotFoundError(f"Missing draft.csv for {year}: {draft_path}")
@@ -86,7 +95,11 @@ def make_snake(year: int, mapping_path: str, out_path: str, max_rounds: Optional
     if team_count == 0:
         # Fallback: infer from max round_pick
         try:
-            team_count = max(int(r.get("round_pick") or 0) for r in rows if (r.get("year") or "") == str(year))
+            team_count = max(
+                int(r.get("round_pick") or 0)
+                for r in rows
+                if (r.get("year") or "") == str(year)
+            )
         except Exception:
             team_count = 12
 
@@ -150,22 +163,24 @@ def make_snake(year: int, mapping_path: str, out_path: str, max_rounds: Optional
         keep_val = (r.get("keeper") or "").strip()
         keep_str = "Yes" if str(keep_val).lower() in ("true", "1", "yes") else "No"
 
-        out_rows.append({
-            "year": str(year),
-            "round": str(rnd),
-            "round_pick": str(rnd_pick),
-            "overall_pick": str(overall_pick),
-            "team_code": code,
-            "team_full_name": meta.get("team_full_name", ""),
-            "is_co_owned": meta.get("is_co_owned", ""),
-            "owner_code_1": meta.get("owner_code_1", ""),
-            "owner_code_2": meta.get("owner_code_2", ""),
-            "player_id": r.get("player_id", ""),
-            "player_name": r.get("player_name", ""),
-            "player_NFL_team": nfl_team,
-            "player_position": pos,
-            "is_a_keeper?": keep_str,
-        })
+        out_rows.append(
+            {
+                "year": str(year),
+                "round": str(rnd),
+                "round_pick": str(rnd_pick),
+                "overall_pick": str(overall_pick),
+                "team_code": code,
+                "team_full_name": meta.get("team_full_name", ""),
+                "is_co_owned": meta.get("is_co_owned", ""),
+                "owner_code_1": meta.get("owner_code_1", ""),
+                "owner_code_2": meta.get("owner_code_2", ""),
+                "player_id": r.get("player_id", ""),
+                "player_name": r.get("player_name", ""),
+                "player_NFL_team": nfl_team,
+                "player_position": pos,
+                "is_a_keeper?": keep_str,
+            }
+        )
 
     fieldnames = [
         "year",
@@ -188,11 +203,17 @@ def make_snake(year: int, mapping_path: str, out_path: str, max_rounds: Optional
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="Create snake-draft canonical CSVs (no auction fields)")
+    ap = argparse.ArgumentParser(
+        description="Create snake-draft canonical CSVs (no auction fields)"
+    )
     ap.add_argument("--year", type=int, required=True)
     ap.add_argument("--out", required=True)
-    ap.add_argument("--mapping", default=os.path.join(ROOT, "data", "teams", "alias_mapping.yaml"))
-    ap.add_argument("--max-rounds", type=int, default=None, help="Limit rounds (default: all)")
+    ap.add_argument(
+        "--mapping", default=os.path.join(ROOT, "data", "teams", "alias_mapping.yaml")
+    )
+    ap.add_argument(
+        "--max-rounds", type=int, default=None, help="Limit rounds (default: all)"
+    )
     args = ap.parse_args()
 
     n, path = make_snake(args.year, args.mapping, args.out, args.max_rounds)

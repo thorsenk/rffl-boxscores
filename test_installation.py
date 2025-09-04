@@ -5,7 +5,6 @@ Test script to verify rffl-boxscores installation and basic functionality.
 
 import sys
 import subprocess
-from pathlib import Path
 
 
 def test_imports():
@@ -13,38 +12,32 @@ def test_imports():
     print("Testing imports...")
 
     try:
-        import pandas as pd
+        import pandas as pd  # noqa: F401
 
         print("✅ pandas imported successfully")
     except ImportError as e:
-        print(f"❌ pandas import failed: {e}")
-        return False
+        raise AssertionError(f"pandas import failed: {e}")
 
     try:
-        import typer
+        import typer  # noqa: F401
 
         print("✅ typer imported successfully")
     except ImportError as e:
-        print(f"❌ typer import failed: {e}")
-        return False
+        raise AssertionError(f"typer import failed: {e}")
 
     try:
-        from espn_api.football import League
+        from espn_api.football import League  # noqa: F401
 
         print("✅ espn_api imported successfully")
     except ImportError as e:
-        print(f"❌ espn_api import failed: {e}")
-        return False
+        raise AssertionError(f"espn_api import failed: {e}")
 
     try:
-        from rffl_boxscores.cli import app
+        from rffl_boxscores.cli import app  # noqa: F401
 
         print("✅ rffl_boxscores.cli imported successfully")
     except ImportError as e:
-        print(f"❌ rffl_boxscores.cli import failed: {e}")
-        return False
-
-    return True
+        raise AssertionError(f"rffl_boxscores.cli import failed: {e}")
 
 
 def test_cli_help():
@@ -55,20 +48,14 @@ def test_cli_help():
         result = subprocess.run(
             ["rffl-bs", "--help"], capture_output=True, text=True, timeout=10
         )
-        if result.returncode == 0:
-            print("✅ CLI help command works")
-            return True
-        else:
-            print(f"❌ CLI help failed: {result.stderr}")
-            return False
+        assert result.returncode == 0, "CLI help failed"
+        print("✅ CLI help command works")
     except FileNotFoundError:
-        print(
-            "❌ CLI command 'rffl-bs' not found. Make sure to install with 'pip install -e .'"
+        raise AssertionError(
+            "CLI 'rffl-bs' not found. Install with 'pip install -e .' "
         )
-        return False
     except subprocess.TimeoutExpired:
-        print("❌ CLI help command timed out")
-        return False
+        raise AssertionError("CLI help command timed out")
 
 
 def test_export_help():
@@ -79,15 +66,10 @@ def test_export_help():
         result = subprocess.run(
             ["rffl-bs", "export", "--help"], capture_output=True, text=True, timeout=10
         )
-        if result.returncode == 0:
-            print("✅ Export command help works")
-            return True
-        else:
-            print(f"❌ Export help failed: {result.stderr}")
-            return False
+        assert result.returncode == 0, "Export help failed"
+        print("✅ Export command help works")
     except subprocess.TimeoutExpired:
-        print("❌ Export help command timed out")
-        return False
+        raise AssertionError("Export help command timed out")
 
 
 def test_validate_help():
@@ -101,15 +83,10 @@ def test_validate_help():
             text=True,
             timeout=10,
         )
-        if result.returncode == 0:
-            print("✅ Validate command help works")
-            return True
-        else:
-            print(f"❌ Validate help failed: {result.stderr}")
-            return False
+        assert result.returncode == 0, "Validate help failed"
+        print("✅ Validate command help works")
     except subprocess.TimeoutExpired:
-        print("❌ Validate help command timed out")
-        return False
+        raise AssertionError("Validate help command timed out")
 
 
 def main():

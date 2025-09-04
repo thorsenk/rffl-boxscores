@@ -4,7 +4,7 @@ from __future__ import annotations
 import argparse
 import os
 import subprocess
-from typing import List
+
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -36,12 +36,18 @@ def normalize_file(year: int, rel_path: str, mapping: str) -> None:
 
 
 def audit_year(year: int) -> None:
-    cmd = ["python3", os.path.join(ROOT, "scripts", "audit_alias_coverage.py"), str(year)]
+    cmd = [
+        "python3",
+        os.path.join(ROOT, "scripts", "audit_alias_coverage.py"),
+        str(year),
+    ]
     subprocess.run(cmd, check=True)
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="Normalize all season CSVs for a given year")
+    ap = argparse.ArgumentParser(
+        description="Normalize all season CSVs for a given year"
+    )
     ap.add_argument("--year", type=int, required=True)
     ap.add_argument(
         "--mapping",
@@ -62,4 +68,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

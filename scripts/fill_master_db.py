@@ -30,19 +30,30 @@ def read_canonicals() -> Dict[Tuple[int, str], dict]:
             "team_full_name": (r.get("team_full_name") or "").strip(),
             "is_co_owned": (r.get("is_co_owned") or "").strip(),
             # Support new owner columns with fallback to legacy names if found
-            "owner_code_1": (r.get("owner_code_1") or r.get("owner_code") or "").strip(),
-            "owner_code_2": (r.get("owner_code_2") or r.get("co_owner_code") or "").strip(),
+            "owner_code_1": (
+                r.get("owner_code_1") or r.get("owner_code") or ""
+            ).strip(),
+            "owner_code_2": (
+                r.get("owner_code_2") or r.get("co_owner_code") or ""
+            ).strip(),
         }
     return m
 
 
 def compute_season_numbers(canon_rows: List[dict]) -> Dict[int, int]:
-    years = sorted({int(r["season_year"]) for r in canon_rows if (r.get("season_year") or "").isdigit()})
+    years = sorted(
+        {
+            int(r["season_year"])
+            for r in canon_rows
+            if (r.get("season_year") or "").isdigit()
+        }
+    )
     return {y: i + 1 for i, y in enumerate(years)}
 
 
 def count_teams_by_year(canon_rows: List[dict]) -> Dict[int, int]:
     from collections import defaultdict
+
     s = defaultdict(set)
     for r in canon_rows:
         y = r.get("season_year")
@@ -53,12 +64,15 @@ def count_teams_by_year(canon_rows: List[dict]) -> Dict[int, int]:
 
 
 def build_draft_order(year: int) -> Dict[str, int]:
-    """Return team_code -> draft_order for a year using round 1 from draft.csv.
+    """Return team_code -> draft_order using round 1 from draft.csv.
 
-    Uses the normalized reports if present; else reads raw and uses team_abbrev (best effort).
+    Uses normalized reports if present; else reads raw and uses team_abbrev
+    (best effort).
     """
     # Prefer normalized to leverage alias mapping and canonical codes
-    norm_path = os.path.join(ROOT, "data", "seasons", str(year), "reports", "draft_normalized.csv")
+    norm_path = os.path.join(
+        ROOT, "data", "seasons", str(year), "reports", "draft_normalized.csv"
+    )
     raw_path = os.path.join(ROOT, "data", "seasons", str(year), "draft.csv")
     order: Dict[str, int] = {}
     if os.path.exists(norm_path):
@@ -104,10 +118,21 @@ def fill_master(in_path: str, out_path: str) -> Dict[str, Any]:
     # Build draft orders cache for seasons where draft data exists
     draft_orders: Dict[int, Dict[str, int]] = {}
 
-    filled_counts = {"team_full_name": 0, "is_co_owned": 0, "owner_code_1": 0, "owner_code_2": 0, "teams_count": 0, "season_number": 0, "draft_order": 0}
+    filled_counts = {
+        "team_full_name": 0,
+        "is_co_owned": 0,
+        "owner_code_1": 0,
+        "owner_code_2": 0,
+        "teams_count": 0,
+        "season_number": 0,
+        "draft_order": 0,
+    }
     total_rows = 0
 
-    with open(in_path, newline="", encoding="utf-8") as f_in, open(out_path, "w", newline="", encoding="utf-8") as f_out:
+    with (
+        open(in_path, newline="", encoding="utf-8") as f_in,
+        open(out_path, "w", newline="", encoding="utf-8") as f_out,
+    ):
         r = csv.DictReader(f_in)
         fieldnames = r.fieldnames or []
         # Ensure new canonical owner columns exist in output
@@ -118,7 +143,10 @@ def fill_master(in_path: str, out_path: str) -> Dict[str, Any]:
         # Legacy co-owner column (if exists) preserved but not required
         legacy_owner2_col = None
         for name in r.fieldnames or []:
-            if name.lower().strip().startswith("owner_code") and "co-owner" in name.lower():
+            if (
+                name.lower().strip().startswith("owner_code")
+                and "co-owner" in name.lower()
+            ):
                 legacy_owner2_col = name
                 break
         if not legacy_owner2_col and "owner_code (CO-OWNER)" in (r.fieldnames or []):
@@ -137,15 +165,17 @@ def fill_master(in_path: str, out_path: str) -> Dict[str, Any]:
 
             # Canonical join
             info = canon_index.get((year, code), {})
-            if not (row.get("team_full_name") or "").strip() and info.get("team_full_name"):
+            if not (row.get("team_full_name") or "").strip() and info.get(
+                "team_full_name"
+            ):
                 row["team_full_name"] = info["team_full_name"]
                 filled_counts["team_full_name"] += 1
             if not (row.get("is_co_owned") or "").strip() and info.get("is_co_owned"):
                 row["is_co_owned"] = info["is_co_owned"]
                 filled_counts["is_co_owned"] += 1
             # New canonical owner columns
-            oc1_blank = (str(row.get("owner_code_1") or "").strip() == "")
-            oc2_blank = (str(row.get("owner_code_2") or "").strip() == "")
+            oc1_blank = str(row.get("owner_code_1") or "").strip() == ""
+            oc2_blank = str(row.get("owner_code_2") or "").strip() == ""
             if oc1_blank and (info.get("owner_code_1") or ""):
                 row["owner_code_1"] = info["owner_code_1"]
                 filled_counts["owner_code_1"] += 1
@@ -190,7 +220,9 @@ def fill_master(in_path: str, out_path: str) -> Dict[str, Any]:
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="Fill master DB CSV with canonical team metadata and draft order")
+    ap = argparse.ArgumentParser(
+        description="Fill master DB CSV with canonical team metadata and draft order"
+    )
     ap.add_argument("--in", dest="in_path", required=True, help="Input master CSV path")
     ap.add_argument("--out", dest="out_path", required=True, help="Output CSV path")
     args = ap.parse_args()

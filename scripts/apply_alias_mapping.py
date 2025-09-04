@@ -11,6 +11,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 def load_aliases(path: str) -> List[dict]:
     import yaml  # PyYAML available via espn_api deps; if not, we could fallback
+
     with open(path, encoding="utf-8") as f:
         y = yaml.safe_load(f)
     return y.get("aliases", []) if isinstance(y, dict) else []
@@ -26,7 +27,9 @@ def build_alias_index(aliases: List[dict]) -> Dict[str, List[dict]]:
     return idx
 
 
-def resolve_canonical(abbrev: str, year: Optional[int], idx: Dict[str, List[dict]]) -> str:
+def resolve_canonical(
+    abbrev: str, year: Optional[int], idx: Dict[str, List[dict]]
+) -> str:
     rules = idx.get(abbrev)
     if not rules:
         return abbrev
@@ -67,8 +70,12 @@ def load_canonical_map() -> Dict[Tuple[int, str], Dict[str, str]]:
                 "team_full_name": (row.get("team_full_name") or "").strip(),
                 "is_co_owned": (row.get("is_co_owned") or "").strip(),
                 # Support new canonical names with fallback to legacy
-                "owner_code_1": (row.get("owner_code_1") or row.get("owner_code") or "").strip(),
-                "owner_code_2": (row.get("owner_code_2") or row.get("co_owner_code") or "").strip(),
+                "owner_code_1": (
+                    row.get("owner_code_1") or row.get("owner_code") or ""
+                ).strip(),
+                "owner_code_2": (
+                    row.get("owner_code_2") or row.get("co_owner_code") or ""
+                ).strip(),
             }
     return meta
 
@@ -84,7 +91,9 @@ def detect_type(headers: List[str]) -> str:
     return "unknown"
 
 
-def normalize_file(path: str, out_path: str, year: Optional[int], idx: Dict[str, List[dict]]) -> Dict[str, int]:
+def normalize_file(
+    path: str, out_path: str, year: Optional[int], idx: Dict[str, List[dict]]
+) -> Dict[str, int]:
     with open(path, newline="", encoding="utf-8") as f:
         reader = csv.DictReader(f)
         headers = reader.fieldnames or []
@@ -113,10 +122,16 @@ def normalize_file(path: str, out_path: str, year: Optional[int], idx: Dict[str,
                 r["winner_code"] = wc
                 # attach names from canonical map
                 if year is not None:
-                    r["home_team_full_name"] = meta.get((year, hc), {}).get("team_full_name", "")
-                    r["away_team_full_name"] = meta.get((year, ac), {}).get("team_full_name", "")
+                    r["home_team_full_name"] = meta.get((year, hc), {}).get(
+                        "team_full_name", ""
+                    )
+                    r["away_team_full_name"] = meta.get((year, ac), {}).get(
+                        "team_full_name", ""
+                    )
                     r["winner_team_full_name"] = (
-                        meta.get((year, wc), {}).get("team_full_name", "") if wc != "TIE" else "TIE"
+                        meta.get((year, wc), {}).get("team_full_name", "")
+                        if wc != "TIE"
+                        else "TIE"
                     )
                 rows.append(r)
                 seen.update([h, a, w])
@@ -157,7 +172,9 @@ def main() -> int:
     ap.add_argument("--file", required=True, help="CSV to normalize")
     ap.add_argument("--year", type=int, help="Season year for mapping context")
     ap.add_argument("--out", required=True, help="Output CSV path")
-    ap.add_argument("--mapping", default=os.path.join(ROOT, "data", "teams", "alias_mapping.yaml"))
+    ap.add_argument(
+        "--mapping", default=os.path.join(ROOT, "data", "teams", "alias_mapping.yaml")
+    )
     args = ap.parse_args()
 
     aliases = load_aliases(args.mapping)

@@ -23,9 +23,23 @@ cd rffl-boxscores
 pip install -e .
 ```
 
+### Requirements
+
+- Python 3.10+
+- One virtualenv named `.venv`
+
+### Quickstart (Python 3.10+; 3.13 OK)
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
+pip install -U pip
+pip install -e ".[dev]"
+```
+
 ### Dependencies
 
-The tool requires Python 3.9+ and the following packages:
+The tool requires Python 3.10+ and the following packages:
 - `espn_api>=0.39.1` - ESPN API client
 - `pandas>=2.2.0` - Data manipulation
 - `python-dateutil>=2.9.0` - Date utilities
@@ -99,6 +113,14 @@ h2h 2018
 ```
 
 Output columns: `week, matchup, home_team, away_team, home_score, away_score, winner, margin`.
+
+### CLI help
+
+```bash
+rffl-bs --help
+# or
+python -m rffl_boxscores.cli --help
+```
 
 ### Export Draft Results
 

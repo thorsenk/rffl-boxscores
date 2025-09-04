@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import csv
 import os
-from typing import Dict, Tuple, List, Any
+from typing import Dict, Tuple, List
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -22,7 +22,9 @@ def write_csv(path: str, rows: List[dict], fieldnames: List[str]) -> None:
 
 
 def season_rs_from_h2h(year: int) -> Dict[str, Dict[str, float]]:
-    path = os.path.join(ROOT, "data", "seasons", str(year), "reports", "h2h_normalized.csv")
+    path = os.path.join(
+        ROOT, "data", "seasons", str(year), "reports", "h2h_normalized.csv"
+    )
     stats: Dict[str, Dict[str, float]] = {}
     if not os.path.exists(path):
         return stats
@@ -50,12 +52,15 @@ def season_rs_from_h2h(year: int) -> Dict[str, Dict[str, float]]:
 
 
 def season_rs_from_boxscores(year: int) -> Dict[str, Dict[str, float]]:
-    path = os.path.join(ROOT, "data", "seasons", str(year), "reports", "boxscores_normalized.csv")
+    path = os.path.join(
+        ROOT, "data", "seasons", str(year), "reports", "boxscores_normalized.csv"
+    )
     stats: Dict[str, Dict[str, float]] = {}
     if not os.path.exists(path):
         return stats
     rows = read_csv(path)
     from collections import defaultdict
+
     tw: Dict[Tuple[int, int, str], Tuple[float, float]] = {}
     for r in rows:
         try:
@@ -83,10 +88,20 @@ def season_rs_from_boxscores(year: int) -> Dict[str, Dict[str, float]]:
         if len(lst) != 2:
             continue
         (c1, a1, p1), (c2, a2, p2) = lst
-        s1 = stats.setdefault(c1, {"pf": 0.0, "pa": 0.0, "proj_pf": 0.0, "proj_pa": 0.0})
-        s2 = stats.setdefault(c2, {"pf": 0.0, "pa": 0.0, "proj_pf": 0.0, "proj_pa": 0.0})
-        s1["pf"] += a1; s1["pa"] += a2; s1["proj_pf"] += p1; s1["proj_pa"] += p2
-        s2["pf"] += a2; s2["pa"] += a1; s2["proj_pf"] += p2; s2["proj_pa"] += p1
+        s1 = stats.setdefault(
+            c1, {"pf": 0.0, "pa": 0.0, "proj_pf": 0.0, "proj_pa": 0.0}
+        )
+        s2 = stats.setdefault(
+            c2, {"pf": 0.0, "pa": 0.0, "proj_pf": 0.0, "proj_pa": 0.0}
+        )
+        s1["pf"] += a1
+        s1["pa"] += a2
+        s1["proj_pf"] += p1
+        s1["proj_pa"] += p2
+        s2["pf"] += a2
+        s2["pa"] += a1
+        s2["proj_pf"] += p2
+        s2["proj_pa"] += p1
     return stats
 
 
@@ -98,7 +113,13 @@ def main() -> int:
     master = os.path.join(ROOT, "build", "outputs", "RFFL_MASTER_DB.csv")
     rows = read_csv(master)
     # Build season maps
-    years = sorted(set(int(r["season_year"]) for r in rows if (r.get("season_year") or "").isdigit()))
+    years = sorted(
+        set(
+            int(r["season_year"])
+            for r in rows
+            if (r.get("season_year") or "").isdigit()
+        )
+    )
     rs_maps: Dict[int, Dict[str, Dict[str, float]]] = {}
     for y in years:
         m = season_rs_from_h2h(y)
@@ -120,7 +141,8 @@ def main() -> int:
         try:
             y = int((r.get("season_year") or "").strip())
         except Exception:
-            completed.append(r); continue
+            completed.append(r)
+            continue
         code = (r.get("team_code") or "").strip()
         m = rs_maps.get(y, {})
         s = m.get(code)
@@ -130,6 +152,7 @@ def main() -> int:
             pa = fmt(s.get("pa", 0.0))
             proj_pf = fmt(s.get("proj_pf", 0.0)) if "proj_pf" in s else ""
             proj_pa = fmt(s.get("proj_pa", 0.0)) if "proj_pa" in s else ""
+
             # Overwrite if blank or placeholder
             def empty_or_placeholder(val: str) -> bool:
                 return (val or "").strip() in ("", "MISSING_TASK_ESPN-MCP")
@@ -157,4 +180,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

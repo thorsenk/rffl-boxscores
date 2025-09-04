@@ -21,7 +21,11 @@ def write_csv(path: str, rows: List[dict], fieldnames: List[str]) -> None:
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="Drop legacy owner columns and standardize owner_code_1/owner_code_2")
+    ap = argparse.ArgumentParser(
+        description=(
+            "Drop legacy owner columns and standardize " "owner_code_1/owner_code_2"
+        )
+    )
     ap.add_argument("--in", dest="in_path", required=True)
     ap.add_argument("--out", dest="out_path", required=True)
     args = ap.parse_args()
@@ -32,7 +36,8 @@ def main() -> int:
 
     legacy_cols = {"owner_code", "owner_code (CO-OWNER)"}
 
-    # Build new schema: keep all columns except legacy owner ones, and ensure owner_code_1/2 exist after is_co_owned
+    # Build new schema: keep all columns except legacy owner ones, and
+    # ensure owner_code_1/2 exist after is_co_owned
     orig_fields = list(rows[0].keys())
     fields = [c for c in orig_fields if c not in legacy_cols]
 
@@ -62,10 +67,11 @@ def main() -> int:
         cleaned.append(r)
 
     write_csv(args.out_path, cleaned, fields)
-    print(f"Wrote clean master: {args.out_path} (cols={len(fields)}, rows={len(cleaned)})")
+    print(
+        f"Wrote clean master: {args.out_path} (cols={len(fields)}, rows={len(cleaned)})"
+    )
     return 0
 
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

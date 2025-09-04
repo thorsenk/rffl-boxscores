@@ -30,7 +30,9 @@ def read_csv_rows(path: str) -> Iterable[Dict[str, str]]:
             yield row
 
 
-def collect_abbrevs() -> Tuple[Dict[Tuple[int, str], Counter], Dict[str, set], Dict[str, set]]:
+def collect_abbrevs() -> (
+    Tuple[Dict[Tuple[int, str], Counter], Dict[str, set], Dict[str, set]]
+):
     per_year_source: Dict[Tuple[int, str], Counter] = defaultdict(Counter)
     years_by_abbrev: Dict[str, set] = defaultdict(set)
     sources_by_abbrev: Dict[str, set] = defaultdict(set)
@@ -117,12 +119,14 @@ def write_observed_csv(per_year_source: Dict[Tuple[int, str], Counter]) -> str:
     rows: List[Dict[str, str]] = []
     for (year, src), counter in sorted(per_year_source.items()):
         for ab, count in sorted(counter.items()):
-            rows.append({
-                "year": str(year),
-                "source": src,
-                "team_abbrev": ab,
-                "count": str(count),
-            })
+            rows.append(
+                {
+                    "year": str(year),
+                    "source": src,
+                    "team_abbrev": ab,
+                    "count": str(count),
+                }
+            )
     with open(out, "w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=["year", "source", "team_abbrev", "count"])
         w.writeheader()
@@ -130,33 +134,47 @@ def write_observed_csv(per_year_source: Dict[Tuple[int, str], Counter]) -> str:
     return out
 
 
-def write_all_csv(years_by_abbrev: Dict[str, set], sources_by_abbrev: Dict[str, set]) -> str:
+def write_all_csv(
+    years_by_abbrev: Dict[str, set], sources_by_abbrev: Dict[str, set]
+) -> str:
     out = os.path.join(OUT_DIR, "all_abbrevs.csv")
     rows: List[Dict[str, str]] = []
     for ab in sorted(years_by_abbrev.keys() | sources_by_abbrev.keys()):
         years = sorted(years_by_abbrev.get(ab, set()))
         sources = sorted(sources_by_abbrev.get(ab, set()))
-        rows.append({
-            "team_abbrev": ab,
-            "years": ",".join(str(y) for y in years),
-            "sources": ",".join(sources),
-            "total_count": "",
-        })
+        rows.append(
+            {
+                "team_abbrev": ab,
+                "years": ",".join(str(y) for y in years),
+                "sources": ",".join(sources),
+                "total_count": "",
+            }
+        )
     with open(out, "w", newline="", encoding="utf-8") as f:
-        w = csv.DictWriter(f, fieldnames=["team_abbrev", "years", "sources", "total_count"])
+        w = csv.DictWriter(
+            f, fieldnames=["team_abbrev", "years", "sources", "total_count"]
+        )
         w.writeheader()
         w.writerows(rows)
     return out
 
 
-def write_canonicals_yaml(years_by_abbrev: Dict[str, set], sources_by_abbrev: Dict[str, set]) -> str:
+def write_canonicals_yaml(
+    years_by_abbrev: Dict[str, set], sources_by_abbrev: Dict[str, set]
+) -> str:
     out = os.path.join(OUT_DIR, "canonicals.yaml")
     now = datetime.utcnow().isoformat(timespec="seconds") + "Z"
     lines: List[str] = []
     lines.append("version: 1")
     lines.append(f"generated_at: {now}")
     lines.append("notes: |-")
-    lines.append("  Canonical mapping scaffold.\n  - Each entry defaults to identity.\n  - To merge historical variants, pick a canonical abbrev and move others into its aliases list.\n  - Keep years/sources lists to help validate coverage.")
+    lines.append("  Canonical mapping scaffold.")
+    lines.append("  - Each entry defaults to identity.")
+    lines.append(
+        "  - To merge historical variants, pick a canonical abbrev and move "
+        "others into its aliases list."
+    )
+    lines.append("  - Keep years/sources lists to help validate coverage.")
     lines.append("teams:")
     latest_names = load_latest_names_by_abbrev()
     for ab in sorted(years_by_abbrev.keys() | sources_by_abbrev.keys()):

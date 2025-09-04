@@ -12,9 +12,12 @@ import csv
 import os
 import sys
 from typing import List, Dict, Any
+from espn_api.football import League  # type: ignore
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 try:
     from dotenv import load_dotenv, find_dotenv  # type: ignore
+
     load_dotenv(find_dotenv(), override=False)
 except Exception:
     # Fallback: naive .env parser for lines like `export KEY=VALUE`
@@ -26,13 +29,14 @@ except Exception:
                 if not line or line.startswith("#"):
                     continue
                 if line.startswith("export "):
-                    line = line[len("export "):]
+                    line = line[len("export ") :]
                 if "=" in line:
                     k, v = line.split("=", 1)
                     v = v.strip().strip('"').strip("'")
                     os.environ.setdefault(k.strip(), v)
 
-from espn_api.football import League  # type: ignore
+# espn_api import is at top
+
 DATA_SEASONS_DIR = os.path.join(ROOT, "data", "seasons")
 OUT_DIR = os.path.join(ROOT, "data", "teams")
 
@@ -94,7 +98,9 @@ def write_year_csv(year: int, rows: List[Dict[str, Any]]) -> str:
     os.makedirs(OUT_DIR, exist_ok=True)
     path = os.path.join(OUT_DIR, f"teams_{year}.csv")
     with open(path, "w", newline="", encoding="utf-8") as f:
-        w = csv.DictWriter(f, fieldnames=["year", "team_id", "team_abbrev", "team_name"])
+        w = csv.DictWriter(
+            f, fieldnames=["year", "team_id", "team_abbrev", "team_name"]
+        )
         w.writeheader()
         w.writerows(rows)
     return path
@@ -104,7 +110,9 @@ def append_all_csv(rows: List[Dict[str, Any]]):
     path = os.path.join(OUT_DIR, "teams_all.csv")
     exists = os.path.exists(path)
     with open(path, "a", newline="", encoding="utf-8") as f:
-        w = csv.DictWriter(f, fieldnames=["year", "team_id", "team_abbrev", "team_name"])
+        w = csv.DictWriter(
+            f, fieldnames=["year", "team_id", "team_abbrev", "team_name"]
+        )
         if not exists:
             w.writeheader()
         w.writerows(rows)
@@ -132,12 +140,14 @@ def main(argv: List[str]) -> int:
             continue
         rows: List[Dict[str, Any]] = []
         for t in getattr(lg, "teams", []) or []:
-            rows.append({
-                "year": year,
-                "team_id": _get_team_id(t),
-                "team_abbrev": _get_team_abbrev(t),
-                "team_name": _get_team_name(t),
-            })
+            rows.append(
+                {
+                    "year": year,
+                    "team_id": _get_team_id(t),
+                    "team_abbrev": _get_team_abbrev(t),
+                    "team_name": _get_team_name(t),
+                }
+            )
         if rows:
             write_year_csv(year, rows)
             append_all_csv(rows)

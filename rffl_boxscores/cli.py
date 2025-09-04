@@ -5,7 +5,7 @@ import os
 import math
 import csv
 from dataclasses import dataclass, asdict
-from typing import List, Dict, Any, Iterable, Tuple
+from typing import List, Dict, Any
 import pandas as pd
 import typer
 from espn_api.football import League
@@ -104,7 +104,10 @@ def _validate_rffl_lineup(starters_df: pd.DataFrame) -> Dict[str, Any]:
                     "position": position,
                     "required": required_count,
                     "actual": actual_count,
-                    "description": f"Expected {required_count} {position}, found {actual_count}",
+                    "description": (
+                        f"Expected {required_count} {position}, "
+                        f"found {actual_count}"
+                    ),
                 }
             )
 
@@ -118,7 +121,10 @@ def _validate_rffl_lineup(starters_df: pd.DataFrame) -> Dict[str, Any]:
                     "type": "flex_ineligible",
                     "position": player_position,
                     "player": player["player_name"],
-                    "description": f"FLEX player {player['player_name']} has position {player_position} (not RB/WR/TE)",
+                    "description": (
+                        f"FLEX player {player['player_name']} pos {player_position} "
+                        "not RB/WR/TE"
+                    ),
                 }
             )
 
@@ -148,7 +154,10 @@ def _validate_rffl_lineup(starters_df: pd.DataFrame) -> Dict[str, Any]:
                     "slot": slot,
                     "position": position,
                     "player": player["player_name"],
-                    "description": f"QB slot contains {position} player {player['player_name']}",
+                    "description": (
+                        f"QB slot contains {position} "
+                        f"player {player['player_name']}"
+                    ),
                 }
             )
 
@@ -160,7 +169,9 @@ def _validate_rffl_lineup(starters_df: pd.DataFrame) -> Dict[str, Any]:
                     "slot": slot,
                     "position": position,
                     "player": player["player_name"],
-                    "description": f"K slot contains {position} player {player['player_name']}",
+                    "description": (
+                        f"K slot contains {position} " f"player {player['player_name']}"
+                    ),
                 }
             )
 
@@ -172,7 +183,10 @@ def _validate_rffl_lineup(starters_df: pd.DataFrame) -> Dict[str, Any]:
                     "slot": slot,
                     "position": position,
                     "player": player["player_name"],
-                    "description": f"D/ST slot contains {position} player {player['player_name']}",
+                    "description": (
+                        f"D/ST slot contains {position} "
+                        f"player {player['player_name']}"
+                    ),
                 }
             )
 
@@ -227,7 +241,9 @@ def _export(
                     if not team:
                         continue
 
-                    # Build starter list (we round per-player first, then sum -> totals match rows exactly)
+                    # Build starter list
+                    # Per-player rounding occurs before summing so team totals
+                    # match the sum of starter rows exactly.
                     starters = []
                     stamped = []
                     for bp in lineup:
@@ -253,7 +269,7 @@ def _export(
                         if row["slot_type"] == "starters":
                             starters.append(row)
 
-                    # Optionally fill missing required starter slots with 0-pt placeholders
+                    # Fill missing required starter slots (0-pt placeholders)
                     if fill_missing_slots:
                         # Count current starters by slot
                         have_counts = {}
@@ -268,8 +284,10 @@ def _export(
                                     "slot": req_slot,
                                     "slot_type": "starters",
                                     "player_name": f"EMPTY SLOT - {req_slot}",
-                                    # Choose a FLEX-eligible position for FLEX placeholder to avoid validation noise
-                                    "position": (req_slot if req_slot != "FLEX" else "WR"),
+                                    # FLEX placeholder uses a FLEX-eligible position
+                                    "position": (
+                                        req_slot if req_slot != "FLEX" else "WR"
+                                    ),
                                     "injured": None,
                                     "injury_status": "EMPTY",
                                     "bye_week": None,
@@ -294,9 +312,7 @@ def _export(
                             )
                         )
     except Exception as e:
-        raise RuntimeError(
-            f"Failed while fetching box scores. Consider checking weeks or cookies. Error: {e}"
-        ) from e
+        raise RuntimeError(f"Failed fetching box scores. Error: {e}") from e
 
     df = pd.DataFrame([asdict(r) for r in rows])
 
@@ -311,7 +327,9 @@ def _export(
             starter_count=("slot", "count"),
         )
         agg["proj_diff"] = (agg["starters_proj_sum"] - agg["team_proj_total"]).round(2)
-        agg["act_diff"] = (agg["starters_actual_sum"] - agg["team_actual_total"]).round(2)
+        agg["act_diff"] = (agg["starters_actual_sum"] - agg["team_actual_total"]).round(
+            2
+        )
 
         bad_proj = agg[agg["proj_diff"].abs() > tolerance]
         bad_act = agg[agg["act_diff"].abs() > tolerance]
@@ -319,8 +337,10 @@ def _export(
 
         if not bad_proj.empty or not bad_act.empty or not bad_cnt.empty:
             raise RuntimeError(
-                f"Export not clean: proj_mismatches={len(bad_proj)}, actual_mismatches={len(bad_act)}, starter_count!=9={len(bad_cnt)}. "
-                f"Consider --fill-missing-slots or adjust tolerance."
+                (
+                    f"Export not clean: proj={len(bad_proj)}, act={len(bad_act)}, "
+                    f"bad_count={len(bad_cnt)}."
+                )
             )
 
     out = out_path or f"validated_boxscores_{year}.csv"
@@ -371,7 +391,7 @@ def _export_h2h(
         for week in range(lo, hi + 1):
             try:
                 matchups = lg.scoreboard(week)
-            except Exception as e:
+            except Exception:
                 # Skip weeks that cannot be fetched
                 continue
             if not matchups:
@@ -407,9 +427,7 @@ def _export_h2h(
                     )
                 )
     except Exception as e:
-        raise RuntimeError(
-            f"Failed while fetching matchup results. Consider checking weeks or cookies. Error: {e}"
-        ) from e
+        raise RuntimeError(f"Failed fetching matchup results. Error: {e}") from e
 
     out = out_path or f"h2h_{year}.csv"
     pd.DataFrame([asdict(r) for r in rows]).to_csv(
@@ -510,7 +528,11 @@ def _export_draft(
     rows: List[DraftRow] = []
     for p in getattr(lg, "draft", []) or []:
         team_abbrev = _get_team_abbrev(getattr(p, "team", None))
-        nom_team = _get_team_abbrev(getattr(p, "nominatingTeam", None)) if getattr(p, "nominatingTeam", None) else None
+        nom_team = (
+            _get_team_abbrev(getattr(p, "nominatingTeam", None))
+            if getattr(p, "nominatingTeam", None)
+            else None
+        )
         rows.append(
             DraftRow(
                 year=year,
@@ -519,7 +541,11 @@ def _export_draft(
                 team_abbrev=team_abbrev,
                 player_id=getattr(p, "playerId", None),
                 player_name=(getattr(p, "playerName", None) or ""),
-                bid_amount=(float(p.bid_amount) if getattr(p, "bid_amount", None) is not None else None),
+                bid_amount=(
+                    float(p.bid_amount)
+                    if getattr(p, "bid_amount", None) is not None
+                    else None
+                ),
                 keeper=getattr(p, "keeper_status", None),
                 nominating_team=nom_team,
             )
@@ -536,7 +562,9 @@ def _export_draft(
 def cmd_draft(
     league: int | None = typer.Option(None, help="ESPN leagueId (defaults to $LEAGUE)"),
     year: int = typer.Option(..., help="Season year"),
-    out: str = typer.Option(None, help="Output CSV path (default data/seasons/<year>/draft.csv)"),
+    out: str = typer.Option(
+        None, help="Output CSV path (default data/seasons/<year>/draft.csv)"
+    ),
     espn_s2: str = typer.Option(
         None, help="Cookie (private leagues). Falls back to $ESPN_S2"
     ),
@@ -591,8 +619,9 @@ def cmd_h2h(
 ):
     """Export simplified head-to-head matchup results to CSV.
 
-    Columns: week, matchup, home_team, away_team, home_score, away_score, winner, margin.
-    Suitable for older seasons where per-player boxscores are unavailable.
+    Columns: week, matchup, home_team, away_team, home_score, away_score,
+    winner, margin. Suitable for older seasons where per-player boxscores
+    are unavailable.
     """
     league_id = league
     if league_id is None:
@@ -618,6 +647,7 @@ def cmd_h2h(
         raise typer.Exit(1)
 
     typer.echo(f"✅ Wrote {path}")
+
 
 @app.command("validate")
 def cmd_validate(
@@ -704,15 +734,15 @@ def cmd_validate_lineup(
                 )
 
     # Print summary
-    typer.echo(f"RFFL Lineup Validation Report")
-    typer.echo(f"=" * 50)
+    typer.echo("RFFL Lineup Validation Report")
+    typer.echo("=" * 50)
     typer.echo(f"Total lineups checked: {total_lineups}")
     typer.echo(f"✅ Valid lineups: {valid_lineups}")
     typer.echo(f"❌ Invalid lineups: {total_lineups - valid_lineups}")
     typer.echo(f"Total issues found: {len(lineup_issues)}")
 
     if lineup_issues:
-        typer.echo(f"\nIssues by type:")
+        typer.echo("\nIssues by type:")
         issue_types = {}
         for issue in lineup_issues:
             issue_type = issue["issue_type"]
@@ -729,13 +759,15 @@ def cmd_validate_lineup(
         typer.echo(f"\n📄 Detailed report written to: {report_path}")
 
         # Show first few issues
-        typer.echo(f"\nFirst 5 issues:")
+        typer.echo("\nFirst 5 issues:")
         for i, issue in enumerate(lineup_issues[:5]):
-            typer.echo(
-                f"  {i+1}. Week {issue['week']} Matchup {issue['matchup']} {issue['team_abbrev']}: {issue['description']}"
+            msg = (
+                f"  {i+1}. Week {issue['week']} Matchup {issue['matchup']} "
+                f"{issue['team_abbrev']}: {issue['description']}"
             )
+            typer.echo(msg)
     else:
-        typer.echo(f"\n🎉 All lineups are RFFL compliant!")
+        typer.echo("\n🎉 All lineups are RFFL compliant!")
 
 
 if __name__ == "__main__":

@@ -15,7 +15,9 @@ def read_csv(path: str) -> List[dict]:
 
 
 def season_rs_from_h2h(year: int) -> Dict[str, Dict[str, float]]:
-    path = os.path.join(ROOT, "data", "seasons", str(year), "reports", "h2h_normalized.csv")
+    path = os.path.join(
+        ROOT, "data", "seasons", str(year), "reports", "h2h_normalized.csv"
+    )
     stats: Dict[str, Dict[str, float]] = {}
     if not os.path.exists(path):
         return stats
@@ -37,7 +39,9 @@ def season_rs_from_h2h(year: int) -> Dict[str, Dict[str, float]]:
         for code, pf, pa in ((hc, hs, as_), (ac, as_, hs)):
             if not code:
                 continue
-            s = stats.setdefault(code, {"gp": 0, "w": 0, "l": 0, "t": 0, "pf": 0.0, "pa": 0.0})
+            s = stats.setdefault(
+                code, {"gp": 0, "w": 0, "l": 0, "t": 0, "pf": 0.0, "pa": 0.0}
+            )
             s["gp"] += 1
             s["pf"] += pf
             s["pa"] += pa
@@ -55,13 +59,15 @@ def season_rs_from_h2h(year: int) -> Dict[str, Dict[str, float]]:
 
 
 def season_rs_from_boxscores(year: int) -> Dict[str, Dict[str, float]]:
-    path = os.path.join(ROOT, "data", "seasons", str(year), "reports", "boxscores_normalized.csv")
+    path = os.path.join(
+        ROOT, "data", "seasons", str(year), "reports", "boxscores_normalized.csv"
+    )
     stats: Dict[str, Dict[str, float]] = {}
     if not os.path.exists(path):
         return stats
     rows = read_csv(path)
     # aggregate to team-week totals from per-player rows
-    from collections import defaultdict
+
     tw_scores: Dict[Tuple[int, int, str], Tuple[float, float]] = {}
     for r in rows:
         try:
@@ -85,6 +91,7 @@ def season_rs_from_boxscores(year: int) -> Dict[str, Dict[str, float]]:
             tw_scores[key] = (sc, pr)
     # pair by (week,matchup)
     from collections import defaultdict
+
     per_pair: Dict[Tuple[int, int], List[Tuple[str, float]]] = defaultdict(list)
     for (wk, mu, code), (sc, pr) in tw_scores.items():
         per_pair[(wk, mu)].append((code, sc, pr))
@@ -93,7 +100,19 @@ def season_rs_from_boxscores(year: int) -> Dict[str, Dict[str, float]]:
             continue
         (c1, s1, p1), (c2, s2, p2) = lst
         for code, pf, pa in ((c1, s1, s2), (c2, s2, s1)):
-            s = stats.setdefault(code, {"gp": 0, "w": 0, "l": 0, "t": 0, "pf": 0.0, "pa": 0.0, "proj_pf": 0.0, "proj_pa": 0.0})
+            s = stats.setdefault(
+                code,
+                {
+                    "gp": 0,
+                    "w": 0,
+                    "l": 0,
+                    "t": 0,
+                    "pf": 0.0,
+                    "pa": 0.0,
+                    "proj_pf": 0.0,
+                    "proj_pa": 0.0,
+                },
+            )
             s["gp"] += 1
             s["pf"] += pf
             s["pa"] += pa
@@ -117,16 +136,34 @@ def season_rs_from_boxscores(year: int) -> Dict[str, Dict[str, float]]:
 def fill_master_rs(in_path: str, out_path: str) -> Dict[str, int]:
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
     # Preload per-year stats maps
-    years = sorted([int(name) for name in os.listdir(os.path.join(ROOT, "data", "seasons")) if name.isdigit()])
+    years = sorted(
+        [
+            int(name)
+            for name in os.listdir(os.path.join(ROOT, "data", "seasons"))
+            if name.isdigit()
+        ]
+    )
     rs_maps: Dict[int, Dict[str, Dict[str, float]]] = {}
     for y in years:
         m = season_rs_from_h2h(y)
         if not m:
             m = season_rs_from_boxscores(y)
         rs_maps[y] = m
-    counts = {"rs_gp": 0, "rs_wins": 0, "rs_losses": 0, "rs_ties": 0, "rs_pf": 0, "rs_pa": 0, "rs_proj_pf": 0, "rs_proj_pa": 0}
+    counts = {
+        "rs_gp": 0,
+        "rs_wins": 0,
+        "rs_losses": 0,
+        "rs_ties": 0,
+        "rs_pf": 0,
+        "rs_pa": 0,
+        "rs_proj_pf": 0,
+        "rs_proj_pa": 0,
+    }
     total = 0
-    with open(in_path, newline="", encoding="utf-8") as f_in, open(out_path, "w", newline="", encoding="utf-8") as f_out:
+    with (
+        open(in_path, newline="", encoding="utf-8") as f_in,
+        open(out_path, "w", newline="", encoding="utf-8") as f_out,
+    ):
         r = csv.DictReader(f_in)
         fn = r.fieldnames or []
         w = csv.DictWriter(f_out, fieldnames=fn)
@@ -142,20 +179,27 @@ def fill_master_rs(in_path: str, out_path: str) -> Dict[str, int]:
             m = rs_maps.get(y, {})
             s = m.get(code)
             if s:
-                for col, key in ("rs_gp","gp"), ("rs_wins","w"), ("rs_losses","l"), ("rs_ties","t"), ("rs_pf","pf"), ("rs_pa","pa"):
+                for col, key in (
+                    ("rs_gp", "gp"),
+                    ("rs_wins", "w"),
+                    ("rs_losses", "l"),
+                    ("rs_ties", "t"),
+                    ("rs_pf", "pf"),
+                    ("rs_pa", "pa"),
+                ):
                     if (row.get(col) or "").strip() == "":
                         val = s[key]
                         # ints without .0; pf/pa keep one decimal if needed
-                        if col in ("rs_pf","rs_pa"):
-                            row[col] = f"{val:.2f}".rstrip('0').rstrip('.')
+                        if col in ("rs_pf", "rs_pa"):
+                            row[col] = f"{val:.2f}".rstrip("0").rstrip(".")
                         else:
                             row[col] = str(int(val))
                         counts[col] += 1
                 # projections (boxscores only)
-                for col, key in ("rs_proj_pf","proj_pf"), ("rs_proj_pa","proj_pa"):
+                for col, key in ("rs_proj_pf", "proj_pf"), ("rs_proj_pa", "proj_pa"):
                     if (row.get(col) or "").strip() == "" and key in s:
                         val = s[key]
-                        row[col] = f"{val:.2f}".rstrip('0').rstrip('.')
+                        row[col] = f"{val:.2f}".rstrip("0").rstrip(".")
                         counts[col] += 1
             w.writerow(row)
     counts["rows"] = total
@@ -163,13 +207,15 @@ def fill_master_rs(in_path: str, out_path: str) -> Dict[str, int]:
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="Fill RS stats (GP/W/L/T/PF/PA) into master DB from season files")
+    ap = argparse.ArgumentParser(
+        description="Fill RS stats (GP/W/L/T/PF/PA) into master DB from season files"
+    )
     ap.add_argument("--in", dest="in_path", required=True)
     ap.add_argument("--out", dest="out_path", required=True)
     args = ap.parse_args()
     stats = fill_master_rs(args.in_path, args.out_path)
     print("Filled RS stats:")
-    for k,v in stats.items():
+    for k, v in stats.items():
         print(f"  {k}: {v}")
     return 0
 
