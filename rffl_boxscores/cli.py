@@ -5,7 +5,7 @@ import os
 import math
 import csv
 from dataclasses import dataclass, asdict
-from typing import List, Dict, Any, Union
+from typing import List, Dict, Any
 import pandas as pd
 import typer
 from espn_api.football import League
@@ -33,7 +33,7 @@ RFFL_LINEUP_REQUIREMENTS = {
 FLEX_ELIGIBLE_POSITIONS = {"RB", "WR", "TE"}
 
 
-def _norm_slot(s: Union[str, None], pos: Union[str, None]) -> str:
+def _norm_slot(s: str | None, pos: str | None) -> str:
     s = (s or "").upper()
     p = (pos or "").upper()
     if s in ("RB/WR/TE", "FLEX"):
@@ -66,7 +66,7 @@ def _f(x, default=0.0):
         return default
 
 
-def _iter_weeks(league: League, start: Union[int, None], end: Union[int, None]):
+def _iter_weeks(league: League, start: int | None, end: int | None):
     lo = start or 1
     hi = end or 18
     for wk in range(lo, hi + 1):
@@ -203,10 +203,10 @@ class Row:
     slot: str
     slot_type: str
     player_name: str
-    position: Union[str, None]
-    injured: Union[bool, None]
-    injury_status: Union[str, None]
-    bye_week: Union[bool, None]
+    position: str | None
+    injured: bool | None
+    injury_status: str | None
+    bye_week: bool | None
     projected_points: float
     actual_points: float
 
@@ -214,10 +214,10 @@ class Row:
 def _export(
     league_id: int,
     year: int,
-    espn_s2: Union[str, None],
-    swid: Union[str, None],
-    start_week: Union[int, None],
-    end_week: Union[int, None],
+    espn_s2: str | None,
+    swid: str | None,
+    start_week: int | None,
+    end_week: int | None,
     out_path: str,
     fill_missing_slots: bool = False,
     require_clean: bool = False,
@@ -363,11 +363,11 @@ class H2HRow:
 def _export_h2h(
     league_id: int,
     year: int,
-    espn_s2: Union[str, None],
-    swid: Union[str, None],
-    start_week: Union[int, None],
-    end_week: Union[int, None],
-    out_path: Union[str, None],
+    espn_s2: str | None,
+    swid: str | None,
+    start_week: int | None,
+    end_week: int | None,
+    out_path: str | None,
 ) -> str:
     """Export simplified head-to-head matchup results for a season.
 
@@ -438,9 +438,7 @@ def _export_h2h(
 
 @app.command("export")
 def cmd_export(
-    league: Union[int, None] = typer.Option(
-        None, help="ESPN leagueId (defaults to $LEAGUE)"
-    ),
+    league: int | None = typer.Option(None, help="ESPN leagueId (defaults to $LEAGUE)"),
     year: int = typer.Option(..., help="Season year"),
     out: str = typer.Option(None, help="Output CSV path"),
     start_week: int = typer.Option(None, help="Start week (default auto)"),
@@ -496,22 +494,22 @@ def cmd_export(
 @dataclass
 class DraftRow:
     year: int
-    round: Union[int, None]
-    round_pick: Union[int, None]
+    round: int | None
+    round_pick: int | None
     team_abbrev: str
-    player_id: Union[int, None]
+    player_id: int | None
     player_name: str
-    bid_amount: Union[float, None]
-    keeper: Union[bool, None]
-    nominating_team: Union[str, None]
+    bid_amount: float | None
+    keeper: bool | None
+    nominating_team: str | None
 
 
 def _export_draft(
     league_id: int,
     year: int,
-    espn_s2: Union[str, None],
-    swid: Union[str, None],
-    out_path: Union[str, None],
+    espn_s2: str | None,
+    swid: str | None,
+    out_path: str | None,
 ) -> str:
     try:
         lg = League(league_id=league_id, year=year, espn_s2=espn_s2, swid=swid)
@@ -562,9 +560,7 @@ def _export_draft(
 
 @app.command("draft")
 def cmd_draft(
-    league: Union[int, None] = typer.Option(
-        None, help="ESPN leagueId (defaults to $LEAGUE)"
-    ),
+    league: int | None = typer.Option(None, help="ESPN leagueId (defaults to $LEAGUE)"),
     year: int = typer.Option(..., help="Season year"),
     out: str = typer.Option(
         None, help="Output CSV path (default data/seasons/<year>/draft.csv)"
@@ -609,9 +605,7 @@ def cmd_draft(
 
 @app.command("h2h")
 def cmd_h2h(
-    league: Union[int, None] = typer.Option(
-        None, help="ESPN leagueId (defaults to $LEAGUE)"
-    ),
+    league: int | None = typer.Option(None, help="ESPN leagueId (defaults to $LEAGUE)"),
     year: int = typer.Option(..., help="Season year"),
     out: str = typer.Option(None, help="Output CSV path (default h2h_<year>.csv)"),
     start_week: int = typer.Option(None, help="Start week (default auto)"),
