@@ -6,21 +6,21 @@ set -e
 
 echo "🚀 Setting up rffl-boxscores..."
 
-# Check if Python 3.9+ is available
+# Check if Python 3.10+ is available
 python_version=$(python3 --version 2>&1 | cut -d' ' -f2 | cut -d'.' -f1,2)
-required_version="3.9"
+required_version="3.10"
 
 if [ "$(printf '%s\n' "$required_version" "$python_version" | sort -V | head -n1)" != "$required_version" ]; then
-    echo "❌ Python 3.9+ is required. Found: $python_version"
+    echo "❌ Python 3.10+ is required. Found: $python_version"
     exit 1
 fi
 
 echo "✅ Python version: $python_version"
 
-# Create virtual environment
+# Create virtual environment (local .venv)
 echo "📦 Creating virtual environment..."
-python3 -m venv venv
-source venv/bin/activate
+python3 -m venv .venv
+source .venv/bin/activate
 
 # Upgrade pip
 echo "⬆️  Upgrading pip..."
@@ -38,7 +38,7 @@ echo ""
 echo "🎉 Setup complete!"
 echo ""
 echo "Next steps:"
-echo "1. Activate the virtual environment: source venv/bin/activate"
+echo "1. Activate the virtual environment: source .venv/bin/activate"
 echo "2. Set up your league ID: echo 'export LEAGUE=YOUR_LEAGUE_ID' >> .env"
 echo "3. For private leagues, add ESPN_S2 and SWID to .env"
 echo "4. Load vibe mode: source ./vibe.sh"

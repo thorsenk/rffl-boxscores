@@ -13,7 +13,7 @@ cd rffl-boxscores
 ./setup.sh
 
 # 3. Activate the virtual environment
-source venv/bin/activate
+source .venv/bin/activate
 
 # 4. Set up your league configuration
 echo 'export LEAGUE=YOUR_LEAGUE_ID' >> .env
@@ -32,8 +32,8 @@ git clone https://github.com/YOUR_USERNAME/rffl-boxscores.git
 cd rffl-boxscores
 
 # 2. Create virtual environment
-python3 -m venv venv
-source venv/bin/activate
+python3 -m venv .venv
+source .venv/bin/activate
 
 # 3. Install dependencies
 pip install -e .
@@ -88,7 +88,7 @@ bsl 2024
 
 ### Python Version Issues
 
-Make sure you have Python 3.9+ installed:
+Make sure you have Python 3.10+ installed:
 
 ```bash
 python3 --version
@@ -107,7 +107,7 @@ chmod +x setup.sh
 If you get import errors, make sure the virtual environment is activated:
 
 ```bash
-source venv/bin/activate
+source .venv/bin/activate
 ```
 
 ### League Access Issues

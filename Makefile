@@ -67,7 +67,7 @@ audit:
 	bash scripts/safe_audit.sh
 
 devclean:
-	rm -rf .venv .venv310 venv build dist *.egg-info
+	rm -rf .venv venv build dist *.egg-info
 
 lint-files:
 	@violations=$$(git ls-files | LC_ALL=C grep -E '[[:space:]]|[^[:ascii:]]|[A-Z]' || true); \
