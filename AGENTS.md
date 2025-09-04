@@ -1,14 +1,17 @@
-Agent Command Reference
+# Agent Command Reference
 
-Overview
+## Overview
+
 - Audience: solo‑vibecoding + agent workflows.
 - Goal: fast, predictable commands with small, stable outputs.
 
-Environment
+## Environment
+
 - Vars: `LEAGUE`, `ESPN_S2`, `SWID` (dotenv auto‑loads `.env`).
 - Precedence: CLI flags > real env > `.env`.
 
-CLI Commands
+## CLI Commands
+
 - `rffl-bs --help`: show main help.
 - `rffl-bs export --league <id> --year <year> [--start-week N] [--end-week N] [--out PATH] [--espn-s2 S2] [--swid SWID] [--fill-missing-slots]`
   Export season boxscores to CSV (`validated_boxscores_<year>.csv` by default). Use `--fill-missing-slots` to insert 0‑pt placeholders for missing required starters (see Enhanced Matchup Box Scores below).
@@ -21,13 +24,15 @@ CLI Commands
 - `rffl-bs validate-lineup <csv> [--out PATH]`
   Validate RFFL lineup rules; writes `<csv>_lineup_validation_report.csv` on issues.
 
-Enhanced Matchup Box Scores
+## Enhanced Matchup Box Scores
+
 - Normalizes ESPN slots/positions into stable slots: QB, RB, WR, TE, FLEX, D/ST, K, Bench, IR.
 - Starters are only QB/RB/WR/TE/FLEX/D/ST/K; bench and IR excluded from totals.
 - Rounds per‑player to 2 decimals first; team totals are sum of rounded starters → exact match with rows.
 - Optional `--fill-missing-slots` ensures 9 starters by inserting `EMPTY SLOT - {SLOT}` rows with 0.0 points when ESPN data has incomplete starters (does not change totals). See `RFFL.md`.
 
-Vibe Helpers (source `./vibe.sh`)
+## Vibe Helpers (source `./vibe.sh`)
+
 - `bs <year> [start] [end] [out]`: export using `$LEAGUE`. Defaults to `data/seasons/<year>/boxscores.csv`, adds `--fill-missing-slots` and enforces `--require-clean`.
 - `h2h <year> [start] [end] [out]`: export simplified H2H results using `$LEAGUE`.
 - `draft <year> [out]`: export draft results to `data/seasons/<year>/draft.csv` by default.
@@ -42,7 +47,8 @@ Vibe Helpers (source `./vibe.sh`)
 - `audit`: safe audit; prints summaries, saves full logs to `build/audit/`.
 - `pview <file> [lines]`: print first N lines (default 200) of a file.
 
-Scripts
+## Scripts
+
 - `scripts/auto_commit.sh`
   Env: `INTERVAL` (sec), `PUSH` (0/1), `ONCE` (0/1), `MAX_IDLE_MINUTES`, `BACKOFF` (0/1), `SKIP_CI` (default 1 → adds "[skip ci]").
 - `scripts/with_autocommit.sh`:
@@ -50,15 +56,18 @@ Scripts
 - `scripts/safe_audit.sh`:
   Collects diagnostics; truncates console output; writes logs to `build/audit/`.
 
-Exit Codes (CLI)
+## Exit Codes (CLI)
+
 - `0`: success.
 - `1`: argument/config/network/data errors (friendly message via Typer).
 
-Safe Output Tips
+## Safe Output Tips
+
 - Prefer `pview file 200`, `sed -n '1,200p' file`, or `rg pattern | head -n 200`.
 - Avoid dumping large CSVs or logs into chat; use `audit` then open files from `build/audit/`.
 
-Data Layout
+## Data Layout
+
 - Clean season data is stored under `data/seasons/<year>/`:
   - 2019+ boxscores: `boxscores.csv` (clean only; overwritten)
   - Legacy H2H: `h2h.csv`

@@ -11,6 +11,7 @@ This document explains how the CLI builds “Enhanced Matchup Box Scores” CSVs
 ## Columns
 
 Each row contains:
+
 - week: NFL week number
 - matchup: matchup index within the week (1‑based)
 - team_abbrev: team identifier (best‑effort from ESPN team fields)
@@ -29,6 +30,7 @@ Each row contains:
 ## Export Logic
 
 High‑level steps (see `rffl_boxscores/cli.py`):
+
 1. Load cookies/env, init `League`.
 2. Iterate weeks; fetch `league.box_scores(week)`.
 3. For each matchup side (home/away), iterate lineup and build rows.
@@ -44,6 +46,7 @@ Why per‑player rounding first? Summing already‑rounded values guarantees the
 ## Normalization Rules
 
 Function `_norm_slot` maps ESPN data to stable slots:
+
 - FLEX, RB/WR/TE → FLEX
 - DST, D/ST, Defense → D/ST
 - BE, Bench → Bench
@@ -52,27 +55,33 @@ Function `_norm_slot` maps ESPN data to stable slots:
 - If slot unknown, fallback to position; D/ST handled explicitly
 
 Starters vs Bench:
+
 - Starters: {QB, RB, WR, TE, D/ST, K, FLEX}
 - Bench: {Bench, IR}
 
 Team Abbreviation:
+
 - Best effort across ESPN team attrs: `abbrev`, `team_abbrev`, `abbreviation`, `team_id`, `name`.
 
 ## Canonicals + Aliases
 
 To maintain a stable historical identity for teams (despite abbrev/name changes), use:
+
 - `data/teams/canonical_teams.csv`: per-year canonical team_code, full name, and ownership info.
 - `data/teams/alias_mapping.yaml`: master alias → canonical mapping with optional year bounds.
 
 Normalize season CSVs to add canonical codes:
+
 - H2H: adds `home_code`, `away_code`, `winner_code` based on aliases.
 - Draft/Boxscores: adds `team_code` alongside source `team_abbrev`.
 
 Scripts:
+
 - `scripts/apply_alias_mapping.py --file <csv> --year <YYYY> --out <path>`
   Applies `alias_mapping.yaml` to one CSV, writing normalized output.
 
 Example:
+
 ```bash
 python3 scripts/apply_alias_mapping.py \
   --file data/seasons/2011/h2h.csv \
@@ -81,12 +90,14 @@ python3 scripts/apply_alias_mapping.py \
 ```
 
 Notes:
+
 - Extend `alias_mapping.yaml` as teams rebrand or abbreviations vary by source/season.
 - Keep `canonical_teams.csv` authoritative for the team_code set per season.
 
 ## RFFL Lineup Requirements
 
 Required starters per team‑week (total 9):
+
 - QB: 1
 - RB: 2
 - WR: 2
@@ -96,6 +107,7 @@ Required starters per team‑week (total 9):
 - K: 1
 
 FLEX Eligibility:
+
 - Only RB, WR, or TE are allowed in FLEX.
 
 ## Missing Starter Fills (optional)
@@ -104,6 +116,7 @@ Some historical lineups have fewer than 9 starters recorded by ESPN (e.g., a mis
 
 - CLI flag: `--fill-missing-slots` (default off)
 - Placeholder fields:
+
   - player_name: `EMPTY SLOT - {SLOT}`
   - slot: missing required slot (e.g., WR)
   - slot_type: starters
@@ -112,6 +125,7 @@ Some historical lineups have fewer than 9 starters recorded by ESPN (e.g., a mis
   - projected_points/actual_points: `0.0`
 
 This ensures:
+
 - Starter count is always 9
 - Team totals remain correct (unchanged), since fills are 0.0
 - Lineup compliance validation becomes deterministic across seasons
@@ -119,11 +133,13 @@ This ensures:
 ## Validations
 
 Command `validate` checks by team‑week:
+
 - proj_diff: sum(starters.projected_points) − team_proj_total (should be 0.00)
 - act_diff: sum(starters.actual_points) − team_actual_total (should be 0.00)
 - starter_count: exactly 9 starters
 
 Command `validate-lineup` enforces:
+
 - Position counts match RFFL requirements (above)
 - FLEX contains only RB/WR/TE
 - No duplicate player names among starters
@@ -134,16 +150,19 @@ If issues exist, each command writes a `*_validation_report.csv` for details.
 ## Example Workflows
 
 Export a season:
+
 ```bash
 rffl-bs export --league $LEAGUE --year 2019
 ```
 
 Export with missing‑slot fills:
+
 ```bash
 rffl-bs export --league $LEAGUE --year 2019 --fill-missing-slots --out validated_boxscores_2019_filled.csv
 ```
 
 Validate:
+
 ```bash
 rffl-bs validate validated_boxscores_2019.csv
 rffl-bs validate-lineup validated_boxscores_2019.csv

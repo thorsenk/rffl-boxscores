@@ -9,7 +9,7 @@ A clean ESPN fantasy football boxscore exporter and validator CLI tool.
 - **Validate Lineup**: Check RFFL lineup compliance (1 QB, 2 RB, 2 WR, 1 TE, 1 FLEX, 1 D/ST, 1 K)
 - **Clean Data**: Normalized slot positions, injury status, and bye week information
 - **Flexible**: Support for public and private leagues with cookie authentication
- - **Design Notes**: See `RFFL.md` for Enhanced Matchup Box Scores logic (normalization, rounding, validations, and the `--fill-missing-slots` option).
+- **Design Notes**: See `RFFL.md` for Enhanced Matchup Box Scores logic (normalization, rounding, validations, and the `--fill-missing-slots` option).
 
 ## Installation
 
@@ -40,6 +40,7 @@ pip install -e ".[dev]"
 ### Dependencies
 
 The tool requires Python 3.10+ and the following packages:
+
 - `espn_api>=0.39.1` - ESPN API client
 - `pandas>=2.2.0` - Data manipulation
 - `python-dateutil>=2.9.0` - Date utilities
@@ -156,6 +157,7 @@ rffl-bs validate-lineup validated_boxscores_2024.csv --out lineup_report.csv
 ```
 
 The lineup validation checks for:
+
 - **Position Counts**: Exactly 1 QB, 2 RB, 2 WR, 1 TE, 1 FLEX, 1 D/ST, 1 K
 - **FLEX Eligibility**: FLEX slot only contains RB, WR, or TE players
 - **Duplicate Players**: No player appears twice in starters
@@ -193,6 +195,7 @@ The validation command checks for:
 ### Validation Report
 
 If issues are found, a detailed report is generated with:
+
 - Week, matchup, and team information
 - Specific issue type (proj_mismatch, actual_mismatch, starter_count)
 - Difference values and counts
@@ -209,6 +212,7 @@ The lineup validation command checks for RFFL compliance:
 ### Lineup Validation Report
 
 If lineup issues are found, a detailed report is generated with:
+
 - Week, matchup, and team information
 - Issue type and description
 - Specific player and position details
@@ -300,11 +304,14 @@ bsp() {
 }
 ```
 
-**Tips**
+## Tips
+
 - Put your league id in `.env`:  
+
   ```bash
   echo 'export LEAGUE=323196' >> .env
   ```
+
 - Private league? Also add `ESPN_S2` and `SWID` to `.env`, then `source .env`.
 - If `rffl-bs` isn't found, ensure your virtualenv is active or run:  
   `python -m rffl_boxscores.cli --help`
@@ -312,6 +319,7 @@ bsp() {
 ## Error Handling
 
 The tool includes robust error handling for:
+
 - Invalid league IDs
 - Network connectivity issues
 - Missing authentication for private leagues
@@ -335,7 +343,7 @@ MIT License - see LICENSE file for details.
 - League default: if `--league` is omitted, the tool uses `$LEAGUE`.
 - Exit codes: non-zero on export/validation errors for easy agent checks.
 - Stable outputs: CSV columns and ordering are deterministic.
- - Command reference: see `AGENTS.md` for all CLI, vibe helpers, and scripts.
+- Command reference: see `AGENTS.md` for all CLI, vibe helpers, and scripts.
 
 ### Optional: Auto-Commit Loop
 
