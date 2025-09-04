@@ -165,24 +165,35 @@ The lineup validation checks for:
 
 ## Output Format
 
-The exported CSV contains the following columns:
+The exported CSV contains the following columns (final schema):
 
 | Column | Description |
 |--------|-------------|
+| `season_year` | Season year |
 | `week` | NFL week number |
 | `matchup` | Matchup number within the week |
-| `team_abbrev` | Team abbreviation |
-| `team_proj_total` | Team's projected total points |
-| `team_actual_total` | Team's actual total points |
-| `slot` | Player's roster slot (QB, RB, WR, TE, FLEX, D/ST, K, Bench, IR) |
-| `slot_type` | Whether player is "starters" or "bench" |
-| `player_name` | Player's name |
+| `team_code` | Canonical team code (alias-mapped) |
+| `is_co_owned?` | Yes/No if co-owned (from canonicals) |
+| `team_owner_1` | Owner code (positional only; no hierarchy) |
+| `team_owner_2` | Co-owner code if present (positional; equals) |
+| `team_projected_total` | Team's projected total points (sum of starters) |
+| `team_actual_total` | Team's actual total points (sum of starters) |
+| `slot_type` | "starters" or "bench" |
+| `slot` | Roster slot (QB, RB, WR, TE, FLEX, D/ST, Bench, IR) |
+| `player_name` | Player's name or placeholder |
+| `nfl_team` | Player's NFL team (abbrev, e.g., CIN, ARI) |
 | `position` | Player's position |
-| `injured` | Whether player is injured |
-| `injury_status` | Injury status (ACTIVE, QUESTIONABLE, etc.) |
-| `bye_week` | Whether player is on bye week |
-| `projected_points` | Player's projected fantasy points |
-| `actual_points` | Player's actual fantasy points |
+| `is_placeholder` | "Yes" for auto-inserted 0-pt starter fills, else "No" |
+| `issue_flag` | Optional marker (e.g., `MISSING_SLOT:FLEX`, `INVALID_FLEX_POSITION:QB`) |
+| `rs_projected_pf` | Player projected points |
+| `rs_actual_pf` | Player actual points |
+
+## Co-Ownership Semantics
+
+- Co-owners are equals. Field suffixes `_1`/`_2` are positional for determinism only.
+- Aggregation guidance:
+  - USD metrics (columns ending in `_usd`): split 50/50 across co-owners.
+  - All other team metrics (wins, PF/PA, etc.): attribute 100% to each co-owner in owner-level views.
 
 ## Data Validation
 
@@ -216,6 +227,31 @@ If lineup issues are found, a detailed report is generated with:
 - Week, matchup, and team information
 - Issue type and description
 - Specific player and position details
+
+## Team-Week Reports
+
+- Legacy (2011–2018): `scripts/make_h2h_teamweek.py` writes `data/seasons/<year>/reports/h2h_teamweek.csv` (one row per team-week).
+- Modern (2019+): `scripts/make_teamweek_unified.py` writes `data/seasons/<year>/reports/teamweek_unified.csv` by collapsing enhanced boxscores.
+- Makefile helper: `make teamweek` builds both across seasons (when inputs exist).
+
+Schema (both): `season_year, week, matchup, team_code, is_co_owned?, team_owner_1, team_owner_2, opponent_code, opp_is_co_owned?, opp_owner_1, opp_owner_2, team_projected_total, team_actual_total, opp_actual_total, result, margin`.
+
+## Flat Index (Exports Snapshot)
+
+- Build a clean, year-prefixed export set under `build/flat/`: `make flat`.
+- Includes draft snake canonicals, team-week reports, and (2019+) boxscores_normalized. Excludes raw inputs and intermediate alias reports.
+- Catalog: `build/flat/catalog.csv` lists source paths and generated flat names.
+
+## Consolidated Excel Exports (Most Recent)
+
+These workbooks compile all seasons by type (one sheet per year) and serve as the latest, dashboard‑ready exports:
+
+- `build/exports/boxscores_normalized_all.xlsx`: enhanced boxscores (2019+) by season
+- `build/exports/drafts_snake_all.xlsx`: Draft Snake Canonicals (2011–2025) by season
+- `build/exports/h2h_teamweek_all.xlsx`: legacy team‑week H2H (2011–2018) by season
+- `build/exports/teamweek_unified_all.xlsx`: modern team‑week (2019+) by season
+
+Each workbook is built from the source‑of‑truth CSVs under `data/seasons/<year>/reports/` and `build/flat/`.
 
 ## Getting ESPN Cookies
 

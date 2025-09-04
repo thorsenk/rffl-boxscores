@@ -84,7 +84,7 @@ def detect_type(headers: List[str]) -> str:
     cols = set(h.strip() for h in headers)
     if {"home_team", "away_team", "winner"}.issubset(cols):
         return "h2h"
-    if "team_abbrev" in cols and {"week", "matchup"}.issubset(cols):
+    if {"week", "matchup"}.issubset(cols) and ("team_abbrev" in cols or "team_code" in cols):
         return "boxscores"
     if "team_abbrev" in cols and {"year", "round"}.issubset(cols):
         return "draft"
@@ -145,7 +145,14 @@ def normalize_file(
             ]
             for r in reader:
                 ab = r.get("team_abbrev", "")
-                tc = resolve_canonical(ab, year, idx)
+                if ab:
+                    tc = resolve_canonical(ab, year, idx)
+                else:
+                    # Already canonicalized exports may carry team_code
+                    tc = (r.get("team_code") or "").strip()
+                    if not tc:
+                        # fallback to whatever we have
+                        tc = ab
                 r["team_code"] = tc
                 if year is not None:
                     info = meta.get((year, tc), {})

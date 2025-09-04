@@ -10,22 +10,26 @@ This document explains how the CLI builds “Enhanced Matchup Box Scores” CSVs
 
 ## Columns
 
-Each row contains:
+Each row contains (final schema):
 
+- season_year: season year
 - week: NFL week number
 - matchup: matchup index within the week (1‑based)
-- team_abbrev: team identifier (best‑effort from ESPN team fields)
-- team_proj_total: rounded sum of the team’s starters’ projected points
+- team_code: canonical team code (via alias mapping)
+- is_co_owned?: Yes/No if co-owned (from canonicals)
+- team_owner_1: primary owner code
+- team_owner_2: secondary owner code (if any)
+- team_projected_total: rounded sum of the team’s starters’ projected points
 - team_actual_total: rounded sum of the team’s starters’ actual points
-- slot: normalized roster slot (QB, RB, WR, TE, FLEX, D/ST, K, Bench, IR)
 - slot_type: "starters" or "bench"
+- slot: normalized roster slot (QB, RB, WR, TE, FLEX, D/ST, Bench, IR)
 - player_name: player display name (or placeholder for fills)
+- nfl_team: player's NFL team (abbrev, e.g., CIN, ARI)
 - position: ESPN position (normalized for D/ST, FLEX placeholder set to WR)
-- injured: boolean if reported
-- injury_status: ESPN injury status or "EMPTY" for placeholders
-- bye_week: boolean if reported
-- projected_points: player projected points (rounded to 2 decimals)
-- actual_points: player actual points (rounded to 2 decimals)
+- is_placeholder: "Yes" for auto-inserted 0-pt fills (when using --fill-missing-slots), else "No"
+- issue_flag: optional marker (e.g., MISSING_SLOT:WR, INVALID_FLEX_POSITION:QB)
+- rs_projected_pf: player projected points (rounded to 2 decimals)
+- rs_actual_pf: player actual points (rounded to 2 decimals)
 
 ## Export Logic
 
@@ -59,9 +63,9 @@ Starters vs Bench:
 - Starters: {QB, RB, WR, TE, D/ST, K, FLEX}
 - Bench: {Bench, IR}
 
-Team Abbreviation:
+Team Identity:
 
-- Best effort across ESPN team attrs: `abbrev`, `team_abbrev`, `abbreviation`, `team_id`, `name`.
+- Resolve canonical `team_code` by mapping ESPN team fields (e.g., abbrev/name) through `data/teams/alias_mapping.yaml` against `data/teams/canonical_teams.csv` per season.
 
 ## Canonicals + Aliases
 
@@ -73,7 +77,7 @@ To maintain a stable historical identity for teams (despite abbrev/name changes)
 Normalize season CSVs to add canonical codes:
 
 - H2H: adds `home_code`, `away_code`, `winner_code` based on aliases.
-- Draft/Boxscores: adds `team_code` alongside source `team_abbrev`.
+- Draft/Boxscores: exporter emits `team_code` (canonical) instead of source `team_abbrev`.
 
 Scripts:
 
@@ -121,8 +125,7 @@ Some historical lineups have fewer than 9 starters recorded by ESPN (e.g., a mis
   - slot: missing required slot (e.g., WR)
   - slot_type: starters
   - position: for FLEX placeholders, set to WR (to remain FLEX‑eligible); otherwise same as slot
-  - injury_status: `EMPTY`
-  - projected_points/actual_points: `0.0`
+  - rs_projected_pf/rs_actual_pf: `0.0`
 
 This ensures:
 
@@ -134,8 +137,8 @@ This ensures:
 
 Command `validate` checks by team‑week:
 
-- proj_diff: sum(starters.projected_points) − team_proj_total (should be 0.00)
-- act_diff: sum(starters.actual_points) − team_actual_total (should be 0.00)
+- proj_diff: sum(starters.rs_projected_pf) − team_projected_total (should be 0.00)
+- act_diff: sum(starters.rs_actual_pf) − team_actual_total (should be 0.00)
 - starter_count: exactly 9 starters
 
 Command `validate-lineup` enforces:
@@ -198,8 +201,15 @@ Two draft outputs are supported when normalizing historical data:
 
 ### Ownership Columns
 
-- `owner_code_1`: primary owner code
-- `owner_code_2`: secondary owner code (if co‑owned)
+- `owner_code_1` / `owner_code_2`: flat owner codes. Names are positional only for determinism; they do not imply hierarchy or priority. Co‑owners are equals.
 - `is_co_owned`: Yes/No convenience flag
 
 These names are canonical across all generated CSVs. If legacy columns exist (e.g., `owner_code`, `owner_code (CO-OWNER)`), generators backfill them for compatibility but do not rely on them.
+
+## Co‑Ownership Semantics
+
+- Equality: Co‑owners are equal. The `*_1` / `*_2` suffixes in column names are not hierarchical.
+- Aggregation rules for analytics:
+  - USD‑denominated metrics (columns ending with `_usd`): split 50/50 between co‑owners.
+  - All other team metrics (wins, PF/PA, records, titles, etc.): attribute 100% to each co‑owner for owner‑level rollups.
+- Determinism: When two owners exist, the pair order in `owner_code_1/2` is stable but arbitrary (often lexical). Logic should not depend on which appears first.

@@ -9,11 +9,13 @@ from typing import List, Dict, Any
 import pandas as pd
 import typer
 from espn_api.football import League
+import yaml
 from dotenv import load_dotenv, find_dotenv
 
 load_dotenv(find_dotenv(), override=False)
 
 app = typer.Typer(add_completion=False, help="RFFL clean exporter + validator")
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 STARTER_SLOTS = {"QB", "RB", "WR", "TE", "D/ST", "K", "FLEX", "RB/WR/TE"}
 BENCH_SLOTS = {"Bench", "IR"}
@@ -85,6 +87,66 @@ def _get_team_abbrev(team) -> str:
                 return value
     # Fallback to team name if no abbreviation found
     return getattr(team, "name", "Unknown")
+
+
+# --- Canonical team mapping helpers ---
+def _load_alias_index(mapping_path: str) -> dict:
+    try:
+        with open(mapping_path, encoding="utf-8") as f:
+            y = yaml.safe_load(f) or {}
+        aliases = y.get("aliases", []) if isinstance(y, dict) else []
+        idx: dict[str, list[dict]] = {}
+        for a in aliases:
+            alias = a.get("alias")
+            if not alias:
+                continue
+            idx.setdefault(alias, []).append(a)
+        return idx
+    except Exception:
+        return {}
+
+
+def _resolve_canonical(abbrev: str, year: int | None, idx: dict) -> str:
+    rules = idx.get(abbrev)
+    if not rules:
+        return abbrev
+    if year is None:
+        for r in rules:
+            if not r.get("start_year") and not r.get("end_year"):
+                return r.get("canonical", abbrev)
+        return rules[0].get("canonical", abbrev)
+    for r in rules:
+        s = r.get("start_year")
+        e = r.get("end_year")
+        if (s is None or year >= int(s)) and (e is None or year <= int(e)):
+            return r.get("canonical", abbrev)
+    return rules[0].get("canonical", abbrev)
+
+
+def _load_canonical_meta() -> dict:
+    """Load canonical team metadata keyed by (year, team_code)."""
+    path = os.path.join(ROOT, "data", "teams", "canonical_teams.csv")
+    meta: dict[tuple[int, str], dict] = {}
+    if not os.path.exists(path):
+        return meta
+    import csv as _csv
+    with open(path, newline="", encoding="utf-8") as f:
+        r = _csv.DictReader(f)
+        for row in r:
+            try:
+                y = int((row.get("season_year") or "").strip())
+            except Exception:
+                continue
+            code = (row.get("team_code") or "").strip()
+            if not y or not code:
+                continue
+            meta[(y, code)] = {
+                "team_full_name": (row.get("team_full_name") or "").strip(),
+                "is_co_owned": (row.get("is_co_owned") or "").strip(),
+                "owner_code_1": (row.get("owner_code_1") or row.get("owner_code") or "").strip(),
+                "owner_code_2": (row.get("owner_code_2") or row.get("co_owner_code") or "").strip(),
+            }
+    return meta
 
 
 def _validate_rffl_lineup(starters_df: pd.DataFrame) -> Dict[str, Any]:
@@ -195,20 +257,24 @@ def _validate_rffl_lineup(starters_df: pd.DataFrame) -> Dict[str, Any]:
 
 @dataclass
 class Row:
+    season_year: int
     week: int
     matchup: int
-    team_abbrev: str
-    team_proj_total: float
+    team_code: str
+    is_co_owned: str
+    team_owner_1: str
+    team_owner_2: str
+    team_projected_total: float
     team_actual_total: float
-    slot: str
     slot_type: str
+    slot: str
     player_name: str
+    nfl_team: str | None
     position: str | None
-    injured: bool | None
-    injury_status: str | None
-    bye_week: bool | None
-    projected_points: float
-    actual_points: float
+    is_placeholder: str
+    issue_flag: str | None
+    rs_projected_pf: float
+    rs_actual_pf: float
 
 
 def _export(
@@ -233,6 +299,9 @@ def _export(
     rows: List[Row] = []
 
     try:
+        # Load alias index once for canonical team_code resolution
+        mapping_path = os.path.join(ROOT, "data", "teams", "alias_mapping.yaml")
+        alias_idx = _load_alias_index(mapping_path)
         for week, boxscores in _iter_weeks(lg, start_week, end_week):
             for m_idx, bs in enumerate(boxscores, start=1):
                 for side in ("home", "away"):
@@ -240,13 +309,22 @@ def _export(
                     lineup = getattr(bs, f"{side}_lineup", None) or []
                     if not team:
                         continue
+                    # resolve canonical team_code
+                    src_abbrev = _get_team_abbrev(team)
+                    team_code = _resolve_canonical(src_abbrev, year, alias_idx)
+                    # owners/co-owned from canonical meta
+                    canon_meta = _load_canonical_meta()
+                    meta = canon_meta.get((year, team_code), {})
+                    is_co_owned = meta.get("is_co_owned", "")
+                    owner1 = meta.get("owner_code_1", "")
+                    owner2 = meta.get("owner_code_2", "")
 
                     # Build starter list
                     # Per-player rounding occurs before summing so team totals
                     # match the sum of starter rows exactly.
                     starters = []
                     stamped = []
-                    for bp in lineup:
+                    for _idx, bp in enumerate(lineup):
                         slot = _norm_slot(
                             getattr(bp, "slot_position", None),
                             getattr(bp, "position", None),
@@ -257,14 +335,19 @@ def _export(
                             "slot": slot,
                             "slot_type": "starters" if _is_starter(slot) else "bench",
                             "player_name": getattr(bp, "name", None),
+                            "nfl_team": getattr(bp, "proTeam", ""),
                             "position": getattr(bp, "position", None),
-                            "injured": getattr(bp, "injured", False),
-                            "injury_status": getattr(bp, "injuryStatus", None)
-                            or getattr(bp, "injury_status", "ACTIVE"),
-                            "bye_week": getattr(bp, "on_bye_week", False),
-                            "projected_points": proj,
-                            "actual_points": act,
+                            "is_placeholder": "No",
+                            "issue_flag": "",
+                            "rs_projected_pf": proj,
+                            "rs_actual_pf": act,
+                            "_orig_idx": _idx,
                         }
+                        # Flag invalid FLEX position on real rows (RB/WR/TE only)
+                        if row["slot"] == "FLEX":
+                            pos = (row.get("position") or "").upper()
+                            if pos not in FLEX_ELIGIBLE_POSITIONS:
+                                row["issue_flag"] = f"INVALID_FLEX_POSITION:{pos or 'UNKNOWN'}"
                         stamped.append(row)
                         if row["slot_type"] == "starters":
                             starters.append(row)
@@ -288,25 +371,52 @@ def _export(
                                     "position": (
                                         req_slot if req_slot != "FLEX" else "WR"
                                     ),
-                                    "injured": None,
-                                    "injury_status": "EMPTY",
-                                    "bye_week": None,
-                                    "projected_points": 0.0,
-                                    "actual_points": 0.0,
+                                    "nfl_team": "",
+                                    "is_placeholder": "Yes",
+                                    "issue_flag": f"MISSING_SLOT:{req_slot}",
+                                    "rs_projected_pf": 0.0,
+                                    "rs_actual_pf": 0.0,
+                                    "_orig_idx": 1000,
                                 }
                                 starters.append(placeholder)
                                 stamped.append(placeholder)
 
-                    team_proj = round(sum(r["projected_points"] for r in starters), 2)
-                    team_act = round(sum(r["actual_points"] for r in starters), 2)
+                    team_proj = round(sum(r["rs_projected_pf"] for r in starters), 2)
+                    team_act = round(sum(r["rs_actual_pf"] for r in starters), 2)
+                    # Order rows: starters in fixed slot sequence, then bench (original order)
+                    desired_order = ["QB", "RB", "RB", "WR", "WR", "TE", "FLEX", "D/ST", "K"]
+                    # Build starters by desired sequence
+                    starters_by_slot = {}
+                    for r in starters:
+                        starters_by_slot.setdefault(r["slot"], []).append(r)
+                    # Maintain original order within same slot
+                    for lst in starters_by_slot.values():
+                        lst.sort(key=lambda x: x.get("_orig_idx", 0))
+                    starters_sorted: list[dict] = []
+                    for s in desired_order:
+                        if s in starters_by_slot and starters_by_slot[s]:
+                            starters_sorted.append(starters_by_slot[s].pop(0))
+                    # Append any leftover starters just in case (stable by slot then orig idx)
+                    leftovers = [r for lst in starters_by_slot.values() for r in lst]
+                    slot_rank = {"QB":0, "RB":1, "WR":2, "TE":3, "FLEX":4, "D/ST":5, "K":6}
+                    leftovers.sort(key=lambda x: (slot_rank.get(x.get("slot",""), 99), x.get("_orig_idx", 0)))
+                    starters_sorted.extend(leftovers)
+                    bench_sorted = [r for r in stamped if r["slot_type"] != "starters"]
+                    bench_sorted.sort(key=lambda x: x.get("_orig_idx", 0))
+                    ordered = starters_sorted + bench_sorted
 
-                    for r in stamped:
+                    for r in ordered:
+                        r.pop("_orig_idx", None)
                         rows.append(
                             Row(
+                                season_year=year,
                                 week=week,
                                 matchup=m_idx,
-                                team_abbrev=_get_team_abbrev(team),
-                                team_proj_total=team_proj,
+                                team_code=team_code,
+                                is_co_owned=is_co_owned,
+                                team_owner_1=owner1,
+                                team_owner_2=owner2,
+                                team_projected_total=team_proj,
                                 team_actual_total=team_act,
                                 **r,
                             )
@@ -315,18 +425,24 @@ def _export(
         raise RuntimeError(f"Failed fetching box scores. Error: {e}") from e
 
     df = pd.DataFrame([asdict(r) for r in rows])
+    # Rename columns to final header names
+    rename_map = {
+        "is_co_owned": "is_co_owned?",
+    }
+    df = df.rename(columns=rename_map)
 
     # Optional: enforce cleanliness before writing
     if require_clean:
         starters = df[df["slot_type"] == "starters"].copy()
-        agg = starters.groupby(["week", "matchup", "team_abbrev"], as_index=False).agg(
-            team_proj_total=("team_proj_total", "first"),
+        team_key = "team_code" if "team_code" in starters.columns else "team_abbrev"
+        agg = starters.groupby(["week", "matchup", team_key], as_index=False).agg(
+            team_projected_total=("team_projected_total", "first"),
             team_actual_total=("team_actual_total", "first"),
-            starters_proj_sum=("projected_points", "sum"),
-            starters_actual_sum=("actual_points", "sum"),
+            starters_proj_sum=("rs_projected_pf", "sum"),
+            starters_actual_sum=("rs_actual_pf", "sum"),
             starter_count=("slot", "count"),
         )
-        agg["proj_diff"] = (agg["starters_proj_sum"] - agg["team_proj_total"]).round(2)
+        agg["proj_diff"] = (agg["starters_proj_sum"] - agg["team_projected_total"]).round(2)
         agg["act_diff"] = (agg["starters_actual_sum"] - agg["team_actual_total"]).round(
             2
         )
@@ -458,7 +574,8 @@ def cmd_export(
         help="Validate in-memory and fail if sums/counts are not clean",
     ),
     tolerance: float = typer.Option(
-        0.0, help="Allowed |proj_sum - team_proj_total| for --require-clean"
+        0.0,
+        help="Allowed |sum(starters rs_projected_pf) - team_projected_total| for --require-clean",
     ),
 ):
     """Export ESPN fantasy football boxscores to CSV format."""
@@ -519,11 +636,8 @@ def _export_draft(
             f"Check LEAGUE/ESPN_S2/SWID and network. Error: {e}"
         ) from e
 
-    # Ensure player map exists so picks can have names
-    try:
-        lg.refresh_draft(refresh_players=True)
-    except Exception as e:
-        raise RuntimeError(f"Failed to fetch draft details: {e}") from e
+    # League initialization already fetches players, teams, and draft picks.
+    # Avoid calling refresh_draft here to prevent duplicate picks from being appended.
 
     rows: List[DraftRow] = []
     for p in getattr(lg, "draft", []) or []:
@@ -653,21 +767,22 @@ def cmd_h2h(
 def cmd_validate(
     csv_path: str = typer.Argument(..., help="validated_boxscores_YYYY.csv"),
     tolerance: float = typer.Option(
-        0.0, help="Allowed |proj_sum - team_proj_total| (e.g., 0.02)"
+        0.0, help="Allowed |sum(starters rs_projected_pf) - team_projected_total| (e.g., 0.02)"
     ),
 ):
     """Validate exported boxscore data for consistency and completeness."""
     df = pd.read_csv(csv_path)
     starters = df[df["slot_type"] == "starters"].copy()
-    agg = starters.groupby(["week", "matchup", "team_abbrev"], as_index=False).agg(
-        team_proj_total=("team_proj_total", "first"),
+    team_key = "team_code" if "team_code" in starters.columns else "team_abbrev"
+    agg = starters.groupby(["week", "matchup", team_key], as_index=False).agg(
+        team_projected_total=("team_projected_total", "first"),
         team_actual_total=("team_actual_total", "first"),
-        starters_proj_sum=("projected_points", "sum"),
-        starters_actual_sum=("actual_points", "sum"),
+        starters_proj_sum=("rs_projected_pf", "sum"),
+        starters_actual_sum=("rs_actual_pf", "sum"),
         starter_count=("slot", "count"),
         slots_list=("slot", lambda s: ",".join(sorted(s))),
     )
-    agg["proj_diff"] = (agg["starters_proj_sum"] - agg["team_proj_total"]).round(2)
+    agg["proj_diff"] = (agg["starters_proj_sum"] - agg["team_projected_total"]).round(2)
     agg["act_diff"] = (agg["starters_actual_sum"] - agg["team_actual_total"]).round(2)
 
     bad_proj = agg[agg["proj_diff"].abs() > tolerance]
@@ -708,9 +823,8 @@ def cmd_validate_lineup(
     valid_lineups = 0
     total_lineups = 0
 
-    for (week, matchup, team), lineup_df in starters.groupby(
-        ["week", "matchup", "team_abbrev"]
-    ):
+    team_key = "team_code" if "team_code" in starters.columns else "team_abbrev"
+    for (week, matchup, team), lineup_df in starters.groupby(["week", "matchup", team_key]):
         total_lineups += 1
         validation = _validate_rffl_lineup(lineup_df)
 
@@ -722,7 +836,7 @@ def cmd_validate_lineup(
                     {
                         "week": week,
                         "matchup": matchup,
-                        "team_abbrev": team,
+                        team_key: team,
                         "issue_type": issue["type"],
                         "description": issue["description"],
                         **{
@@ -761,9 +875,10 @@ def cmd_validate_lineup(
         # Show first few issues
         typer.echo("\nFirst 5 issues:")
         for i, issue in enumerate(lineup_issues[:5]):
+            team_val = issue.get("team_code") or issue.get("team_abbrev")
             msg = (
                 f"  {i+1}. Week {issue['week']} Matchup {issue['matchup']} "
-                f"{issue['team_abbrev']}: {issue['description']}"
+                f"{team_val}: {issue['description']}"
             )
             typer.echo(msg)
     else:

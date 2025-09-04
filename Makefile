@@ -16,6 +16,8 @@ help:
 	@echo "make normalize YEAR=YYYY   # normalize one season"
 	@echo "make normalize             # normalize all seasons"
 	@echo "make drafts                # generate corrected + snake drafts for all seasons"
+	@echo "make teamweek              # generate team-week H2H (legacy) + unified (modern)"
+	@echo "make flat                 # build flat year_*.csv copies + catalog"
 	@echo "make master                # build master_v2/v2_rs/v2 (from $(MASTER_IN))"
 	@echo "make clean_master          # drop legacy owner columns from master_v2"
 	@echo "make all                   # normalize (all), drafts, master, clean_master"
@@ -47,6 +49,21 @@ clean_master:
 	@"$(PYTHON)" scripts/make_master_clean.py --in build/outputs/RFFL_MASTER_DB_v2.csv --out build/outputs/RFFL_MASTER_DB_clean.csv
 
 all: normalize drafts master clean_master
+
+# Build team-week reports for all seasons
+teamweek:
+	@for y in $(YEARS); do \
+	  if [ -f data/seasons/$$y/h2h.csv ]; then \
+	    "$(PYTHON)" scripts/make_h2h_teamweek.py --year $$y --out data/seasons/$$y/reports/h2h_teamweek.csv; \
+	  fi; \
+	  if [ -f data/seasons/$$y/reports/boxscores_normalized.csv ]; then \
+	    "$(PYTHON)" scripts/make_teamweek_unified.py --year $$y --out data/seasons/$$y/reports/teamweek_unified.csv; \
+	  fi; \
+	done
+
+# Create flat index with year-prefixed filenames
+flat:
+	@"$(PYTHON)" scripts/make_flat_index.py --out build/flat
 
 # --- QoL targets for local dev ---
 venv:

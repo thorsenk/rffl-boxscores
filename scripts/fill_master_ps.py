@@ -86,7 +86,7 @@ def load_playoff_pairs_from_box(
             continue
         try:
             sc = float(r.get("team_actual_total") or 0.0)
-            pr = float(r.get("team_proj_total") or 0.0)
+            pr = float(r.get("team_projected_total") or r.get("team_proj_total") or 0.0)
         except Exception:
             continue
         key = (wk, mu, code)
