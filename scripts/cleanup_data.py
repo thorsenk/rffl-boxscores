@@ -39,7 +39,14 @@ def should_keep(path: str, year: int) -> bool:
     if name == "h2h_teamweek.csv":
         return year < 2019
     # Explicitly drop legacy/intermediate/derived reports
-    if name in {"boxscores_lineup_validation_report.csv", "h2h_normalized.csv", "alias_coverage.csv", "draft_normalized.csv", "keepers.csv", "keepers_summary.csv"}:
+    if name in {
+        "boxscores_lineup_validation_report.csv",
+        "h2h_normalized.csv",
+        "alias_coverage.csv",
+        "draft_normalized.csv",
+        "keepers.csv",
+        "keepers_summary.csv",
+    }:
         return False
     # Everything else is deletable by default
     return False
@@ -47,7 +54,9 @@ def should_keep(path: str, year: int) -> bool:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description="Identify and clean obsolete data files")
-    ap.add_argument("--apply", action="store_true", help="Perform deletion (otherwise dry-run)")
+    ap.add_argument(
+        "--apply", action="store_true", help="Perform deletion (otherwise dry-run)"
+    )
     args = ap.parse_args()
 
     base = os.path.join(ROOT, "data", "seasons")
@@ -67,7 +76,10 @@ def main() -> int:
 
     # Root-level validated_* artifacts are safe to delete
     for fn in os.listdir(ROOT):
-        if (fn.startswith("validated_boxscores_") or fn.startswith("validated_CLI_Boxscores_")) and fn.endswith(".csv"):
+        if (
+            fn.startswith("validated_boxscores_")
+            or fn.startswith("validated_CLI_Boxscores_")
+        ) and fn.endswith(".csv"):
             to_delete.append(os.path.join(ROOT, fn))
 
     # Deduplicate lists

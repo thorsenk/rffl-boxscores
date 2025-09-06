@@ -5,7 +5,7 @@ import argparse
 import csv
 import os
 import shutil
-from typing import Dict, List, Tuple
+from typing import List, Tuple
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -14,7 +14,13 @@ def _season_dirs(base: str) -> List[str]:
     return sorted([d for d in os.listdir(base) if d.isdigit()])
 
 
-def _add_if_exists(files: List[Tuple[str, str, str, str]], year: str, src: str, flat_name: str, kind: str) -> None:
+def _add_if_exists(
+    files: List[Tuple[str, str, str, str]],
+    year: str,
+    src: str,
+    flat_name: str,
+    kind: str,
+) -> None:
     if os.path.exists(src):
         files.append((year, kind, src, flat_name))
 
@@ -36,15 +42,45 @@ def build_flat_index(out_dir: str) -> Tuple[int, str]:
 
         # Reports – Draft (use Snake canonicals as the source of truth in flat)
         # Exclude Draft-Correct-Canonicals from flat to avoid duplication
-        _add_if_exists(items, y, os.path.join(rdir, f"{y}-Draft-Snake-Canonicals.csv"), f"{y}_draft_snake_canonicals.csv", "draft_snake_canonicals")
+        _add_if_exists(
+            items,
+            y,
+            os.path.join(rdir, f"{y}-Draft-Snake-Canonicals.csv"),
+            f"{y}_draft_snake_canonicals.csv",
+            "draft_snake_canonicals",
+        )
 
         # Reports – Boxscores
-        _add_if_exists(items, y, os.path.join(rdir, "boxscores_normalized.csv"), f"{y}_boxscores_normalized.csv", "boxscores_normalized")
-        _add_if_exists(items, y, os.path.join(rdir, "boxscores_lineup_validation_report.csv"), f"{y}_boxscores_lineup_validation_report.csv", "boxscores_lineup_report")
+        _add_if_exists(
+            items,
+            y,
+            os.path.join(rdir, "boxscores_normalized.csv"),
+            f"{y}_boxscores_normalized.csv",
+            "boxscores_normalized",
+        )
+        _add_if_exists(
+            items,
+            y,
+            os.path.join(rdir, "boxscores_lineup_validation_report.csv"),
+            f"{y}_boxscores_lineup_validation_report.csv",
+            "boxscores_lineup_report",
+        )
 
         # Reports – Team-week
-        _add_if_exists(items, y, os.path.join(rdir, "h2h_teamweek.csv"), f"{y}_h2h_teamweek.csv", "teamweek_legacy")
-        _add_if_exists(items, y, os.path.join(rdir, "teamweek_unified.csv"), f"{y}_teamweek_unified.csv", "teamweek_unified")
+        _add_if_exists(
+            items,
+            y,
+            os.path.join(rdir, "h2h_teamweek.csv"),
+            f"{y}_h2h_teamweek.csv",
+            "teamweek_legacy",
+        )
+        _add_if_exists(
+            items,
+            y,
+            os.path.join(rdir, "teamweek_unified.csv"),
+            f"{y}_teamweek_unified.csv",
+            "teamweek_unified",
+        )
 
     # Write catalog and copy files
     catalog_path = os.path.join(out_dir, "catalog.csv")
@@ -72,7 +108,9 @@ def build_flat_index(out_dir: str) -> Tuple[int, str]:
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="Create a flat index of season files with year-prefixed names")
+    ap = argparse.ArgumentParser(
+        description="Create a flat index of season files with year-prefixed names"
+    )
     ap.add_argument("--out", default=os.path.join(ROOT, "build", "flat"))
     args = ap.parse_args()
 

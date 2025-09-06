@@ -84,7 +84,9 @@ def detect_type(headers: List[str]) -> str:
     cols = set(h.strip() for h in headers)
     if {"home_team", "away_team", "winner"}.issubset(cols):
         return "h2h"
-    if {"week", "matchup"}.issubset(cols) and ("team_abbrev" in cols or "team_code" in cols):
+    if {"week", "matchup"}.issubset(cols) and (
+        "team_abbrev" in cols or "team_code" in cols
+    ):
         return "boxscores"
     if "team_abbrev" in cols and {"year", "round"}.issubset(cols):
         return "draft"

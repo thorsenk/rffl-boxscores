@@ -4,7 +4,7 @@ from __future__ import annotations
 import argparse
 import csv
 import os
-from typing import Dict, List, Tuple
+from typing import List, Tuple
 
 # Reuse helpers from apply_alias_mapping
 from apply_alias_mapping import (

@@ -130,6 +130,7 @@ def _load_canonical_meta() -> dict:
     if not os.path.exists(path):
         return meta
     import csv as _csv
+
     with open(path, newline="", encoding="utf-8") as f:
         r = _csv.DictReader(f)
         for row in r:
@@ -143,8 +144,12 @@ def _load_canonical_meta() -> dict:
             meta[(y, code)] = {
                 "team_full_name": (row.get("team_full_name") or "").strip(),
                 "is_co_owned": (row.get("is_co_owned") or "").strip(),
-                "owner_code_1": (row.get("owner_code_1") or row.get("owner_code") or "").strip(),
-                "owner_code_2": (row.get("owner_code_2") or row.get("co_owner_code") or "").strip(),
+                "owner_code_1": (
+                    row.get("owner_code_1") or row.get("owner_code") or ""
+                ).strip(),
+                "owner_code_2": (
+                    row.get("owner_code_2") or row.get("co_owner_code") or ""
+                ).strip(),
             }
     return meta
 
@@ -347,7 +352,9 @@ def _export(
                         if row["slot"] == "FLEX":
                             pos = (row.get("position") or "").upper()
                             if pos not in FLEX_ELIGIBLE_POSITIONS:
-                                row["issue_flag"] = f"INVALID_FLEX_POSITION:{pos or 'UNKNOWN'}"
+                                row["issue_flag"] = (
+                                    f"INVALID_FLEX_POSITION:{pos or 'UNKNOWN'}"
+                                )
                         stamped.append(row)
                         if row["slot_type"] == "starters":
                             starters.append(row)
@@ -384,7 +391,17 @@ def _export(
                     team_proj = round(sum(r["rs_projected_pf"] for r in starters), 2)
                     team_act = round(sum(r["rs_actual_pf"] for r in starters), 2)
                     # Order rows: starters in fixed slot sequence, then bench (original order)
-                    desired_order = ["QB", "RB", "RB", "WR", "WR", "TE", "FLEX", "D/ST", "K"]
+                    desired_order = [
+                        "QB",
+                        "RB",
+                        "RB",
+                        "WR",
+                        "WR",
+                        "TE",
+                        "FLEX",
+                        "D/ST",
+                        "K",
+                    ]
                     # Build starters by desired sequence
                     starters_by_slot = {}
                     for r in starters:
@@ -398,8 +415,21 @@ def _export(
                             starters_sorted.append(starters_by_slot[s].pop(0))
                     # Append any leftover starters just in case (stable by slot then orig idx)
                     leftovers = [r for lst in starters_by_slot.values() for r in lst]
-                    slot_rank = {"QB":0, "RB":1, "WR":2, "TE":3, "FLEX":4, "D/ST":5, "K":6}
-                    leftovers.sort(key=lambda x: (slot_rank.get(x.get("slot",""), 99), x.get("_orig_idx", 0)))
+                    slot_rank = {
+                        "QB": 0,
+                        "RB": 1,
+                        "WR": 2,
+                        "TE": 3,
+                        "FLEX": 4,
+                        "D/ST": 5,
+                        "K": 6,
+                    }
+                    leftovers.sort(
+                        key=lambda x: (
+                            slot_rank.get(x.get("slot", ""), 99),
+                            x.get("_orig_idx", 0),
+                        )
+                    )
                     starters_sorted.extend(leftovers)
                     bench_sorted = [r for r in stamped if r["slot_type"] != "starters"]
                     bench_sorted.sort(key=lambda x: x.get("_orig_idx", 0))
@@ -442,7 +472,9 @@ def _export(
             starters_actual_sum=("rs_actual_pf", "sum"),
             starter_count=("slot", "count"),
         )
-        agg["proj_diff"] = (agg["starters_proj_sum"] - agg["team_projected_total"]).round(2)
+        agg["proj_diff"] = (
+            agg["starters_proj_sum"] - agg["team_projected_total"]
+        ).round(2)
         agg["act_diff"] = (agg["starters_actual_sum"] - agg["team_actual_total"]).round(
             2
         )
@@ -767,7 +799,8 @@ def cmd_h2h(
 def cmd_validate(
     csv_path: str = typer.Argument(..., help="validated_boxscores_YYYY.csv"),
     tolerance: float = typer.Option(
-        0.0, help="Allowed |sum(starters rs_projected_pf) - team_projected_total| (e.g., 0.02)"
+        0.0,
+        help="Allowed |sum(starters rs_projected_pf) - team_projected_total| (e.g., 0.02)",
     ),
 ):
     """Validate exported boxscore data for consistency and completeness."""
@@ -824,7 +857,9 @@ def cmd_validate_lineup(
     total_lineups = 0
 
     team_key = "team_code" if "team_code" in starters.columns else "team_abbrev"
-    for (week, matchup, team), lineup_df in starters.groupby(["week", "matchup", team_key]):
+    for (week, matchup, team), lineup_df in starters.groupby(
+        ["week", "matchup", team_key]
+    ):
         total_lineups += 1
         validation = _validate_rffl_lineup(lineup_df)
 

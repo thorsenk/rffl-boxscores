@@ -30,7 +30,12 @@ def season_years() -> List[int]:
 
 def keeper_rows_from_snake(year: int) -> List[dict]:
     path = os.path.join(
-        ROOT, "data", "seasons", str(year), "reports", f"{year}-Draft-Snake-Canonicals.csv"
+        ROOT,
+        "data",
+        "seasons",
+        str(year),
+        "reports",
+        f"{year}-Draft-Snake-Canonicals.csv",
     )
     if not os.path.exists(path):
         return []
@@ -77,13 +82,15 @@ def audit_year(year: int) -> Tuple[str, str]:
         # Build summary by team_code
         from collections import defaultdict
 
-        groups: Dict[str, Dict[str, any]] = defaultdict(lambda: {
-            "season_year": str(year),
-            "team_code": "",
-            "keepers_count": 0,
-            "rounds": [],
-            "players": [],
-        })
+        groups: Dict[str, Dict[str, any]] = defaultdict(
+            lambda: {
+                "season_year": str(year),
+                "team_code": "",
+                "keepers_count": 0,
+                "rounds": [],
+                "players": [],
+            }
+        )
         for r in keepers:
             code = (r.get("team_code") or "").strip()
             groups[code]["team_code"] = code
@@ -115,27 +122,35 @@ def audit_year(year: int) -> Tuple[str, str]:
         write_csv(summary_path, summary_rows, summary_fields)
     else:
         # No keepers (or file missing) -> write empty shells for consistency
-        write_csv(detail_path, [], [
-            "year",
-            "round",
-            "round_pick",
-            "overall_pick",
-            "team_code",
-            "team_full_name",
-            "owner_code_1",
-            "owner_code_2",
-            "player_id",
-            "player_name",
-            "player_NFL_team",
-            "player_position",
-        ])
-        write_csv(summary_path, [], [
-            "season_year",
-            "team_code",
-            "keepers_count",
-            "rounds",
-            "players",
-        ])
+        write_csv(
+            detail_path,
+            [],
+            [
+                "year",
+                "round",
+                "round_pick",
+                "overall_pick",
+                "team_code",
+                "team_full_name",
+                "owner_code_1",
+                "owner_code_2",
+                "player_id",
+                "player_name",
+                "player_NFL_team",
+                "player_position",
+            ],
+        )
+        write_csv(
+            summary_path,
+            [],
+            [
+                "season_year",
+                "team_code",
+                "keepers_count",
+                "rounds",
+                "players",
+            ],
+        )
 
     return detail_path, summary_path
 
@@ -190,7 +205,9 @@ def audit_all(year_filter: List[int] | None = None) -> Tuple[str, str]:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description="Keeper audit across seasons")
-    ap.add_argument("--years", nargs="*", type=int, help="Optional list of years to audit")
+    ap.add_argument(
+        "--years", nargs="*", type=int, help="Optional list of years to audit"
+    )
     args = ap.parse_args()
 
     d, s = audit_all(args.years)
@@ -201,4 +218,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
