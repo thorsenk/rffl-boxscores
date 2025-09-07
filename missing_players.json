@@ -1,0 +1,338 @@
+[
+  {
+    "year": 2019,
+    "week": 1,
+    "player_name": "Rob Gronkowski",
+    "position": "TE",
+    "row_index": 79
+  },
+  {
+    "year": 2019,
+    "week": 1,
+    "player_name": "Antonio Brown",
+    "position": "WR",
+    "row_index": 121
+  },
+  {
+    "year": 2019,
+    "week": 4,
+    "player_name": "Matt Bryant",
+    "position": "K",
+    "row_index": 695
+  },
+  {
+    "year": 2019,
+    "week": 6,
+    "player_name": "Mike Nugent",
+    "position": "K",
+    "row_index": 967
+  },
+  {
+    "year": 2019,
+    "week": 13,
+    "player_name": "EMPTY SLOT - WR",
+    "position": "WR",
+    "row_index": 2355
+  },
+  {
+    "year": 2020,
+    "week": 1,
+    "player_name": "Zane Gonzalez",
+    "position": "K",
+    "row_index": 8
+  },
+  {
+    "year": 2020,
+    "week": 1,
+    "player_name": "Mark Ingram II",
+    "position": "RB",
+    "row_index": 18
+  },
+  {
+    "year": 2020,
+    "week": 1,
+    "player_name": "Jared Cook",
+    "position": "TE",
+    "row_index": 53
+  },
+  {
+    "year": 2020,
+    "week": 1,
+    "player_name": "DeSean Jackson",
+    "position": "WR",
+    "row_index": 74
+  },
+  {
+    "year": 2020,
+    "week": 1,
+    "player_name": "Golden Tate",
+    "position": "WR",
+    "row_index": 175
+  },
+  {
+    "year": 2020,
+    "week": 1,
+    "player_name": "Kyle Rudolph",
+    "position": "TE",
+    "row_index": 191
+  },
+  {
+    "year": 2020,
+    "week": 4,
+    "player_name": "Duke Johnson",
+    "position": "RB",
+    "row_index": 721
+  },
+  {
+    "year": 2021,
+    "week": 1,
+    "player_name": "Josh Lambo",
+    "position": "K",
+    "row_index": 24
+  },
+  {
+    "year": 2021,
+    "week": 1,
+    "player_name": "Henry Ruggs III",
+    "position": "WR",
+    "row_index": 89
+  },
+  {
+    "year": 2021,
+    "week": 1,
+    "player_name": "Le'Veon Bell",
+    "position": "RB",
+    "row_index": 94
+  },
+  {
+    "year": 2021,
+    "week": 1,
+    "player_name": "Antonio Brown",
+    "position": "WR",
+    "row_index": 179
+  },
+  {
+    "year": 2021,
+    "week": 2,
+    "player_name": "Tristan Vizcaino",
+    "position": "K",
+    "row_index": 231
+  },
+  {
+    "year": 2021,
+    "week": 9,
+    "player_name": "Adrian Peterson",
+    "position": "RB",
+    "row_index": 1696
+  },
+  {
+    "year": 2022,
+    "week": 1,
+    "player_name": "Kenny Golladay",
+    "position": "WR",
+    "row_index": 61
+  },
+  {
+    "year": 2022,
+    "week": 1,
+    "player_name": "J.D. McKissic",
+    "position": "RB",
+    "row_index": 63
+  },
+  {
+    "year": 2022,
+    "week": 1,
+    "player_name": "Darrell Henderson Jr.",
+    "position": "RB",
+    "row_index": 76
+  },
+  {
+    "year": 2022,
+    "week": 1,
+    "player_name": "Odell Beckham Jr.",
+    "position": "WR",
+    "row_index": 79
+  },
+  {
+    "year": 2022,
+    "week": 1,
+    "player_name": "Mike Davis",
+    "position": "RB",
+    "row_index": 111
+  },
+  {
+    "year": 2022,
+    "week": 1,
+    "player_name": "Damien Williams",
+    "position": "RB",
+    "row_index": 127
+  },
+  {
+    "year": 2022,
+    "week": 1,
+    "player_name": "Leonard Fournette",
+    "position": "RB",
+    "row_index": 129
+  },
+  {
+    "year": 2022,
+    "week": 1,
+    "player_name": "Adam Thielen",
+    "position": "WR",
+    "row_index": 132
+  },
+  {
+    "year": 2022,
+    "week": 1,
+    "player_name": "Melvin Gordon III",
+    "position": "RB",
+    "row_index": 138
+  },
+  {
+    "year": 2022,
+    "week": 1,
+    "player_name": "Ezekiel Elliott",
+    "position": "RB",
+    "row_index": 162
+  },
+  {
+    "year": 2022,
+    "week": 1,
+    "player_name": "Robert Woods",
+    "position": "WR",
+    "row_index": 172
+  },
+  {
+    "year": 2022,
+    "week": 2,
+    "player_name": "Carson Wentz",
+    "position": "QB",
+    "row_index": 304
+  },
+  {
+    "year": 2022,
+    "week": 2,
+    "player_name": "Robbie Anderson",
+    "position": "WR",
+    "row_index": 366
+  },
+  {
+    "year": 2022,
+    "week": 5,
+    "player_name": "Isaiah McKenzie",
+    "position": "WR",
+    "row_index": 911
+  },
+  {
+    "year": 2022,
+    "week": 6,
+    "player_name": "Phillip Lindsay",
+    "position": "RB",
+    "row_index": 1055
+  },
+  {
+    "year": 2022,
+    "week": 6,
+    "player_name": "Tevin Coleman",
+    "position": "RB",
+    "row_index": 1071
+  },
+  {
+    "year": 2022,
+    "week": 7,
+    "player_name": "DeSean Jackson",
+    "position": "WR",
+    "row_index": 1198
+  },
+  {
+    "year": 2022,
+    "week": 7,
+    "player_name": "Matt Ryan",
+    "position": "QB",
+    "row_index": 1312
+  },
+  {
+    "year": 2022,
+    "week": 15,
+    "player_name": "EMPTY SLOT - D/ST",
+    "position": "D/ST",
+    "row_index": 2774
+  },
+  {
+    "year": 2022,
+    "week": 15,
+    "player_name": "EMPTY SLOT - K",
+    "position": "K",
+    "row_index": 2775
+  },
+  {
+    "year": 2023,
+    "week": 1,
+    "player_name": "Odell Beckham Jr.",
+    "position": "WR",
+    "row_index": 148
+  },
+  {
+    "year": 2023,
+    "week": 2,
+    "player_name": "Melvin Gordon III",
+    "position": "RB",
+    "row_index": 207
+  },
+  {
+    "year": 2023,
+    "week": 7,
+    "player_name": "Darrell Henderson Jr.",
+    "position": "RB",
+    "row_index": 1215
+  },
+  {
+    "year": 2023,
+    "week": 13,
+    "player_name": "EMPTY SLOT - D/ST",
+    "position": "D/ST",
+    "row_index": 2342
+  },
+  {
+    "year": 2024,
+    "week": 1,
+    "player_name": "Ezekiel Elliott",
+    "position": "RB",
+    "row_index": 10
+  },
+  {
+    "year": 2024,
+    "week": 1,
+    "player_name": "Aaron Rodgers",
+    "position": "QB",
+    "row_index": 29
+  },
+  {
+    "year": 2024,
+    "week": 1,
+    "player_name": "Gus Edwards",
+    "position": "RB",
+    "row_index": 89
+  },
+  {
+    "year": 2024,
+    "week": 2,
+    "player_name": "Tyler Lockett",
+    "position": "WR",
+    "row_index": 292
+  },
+  {
+    "year": 2024,
+    "week": 4,
+    "player_name": "Matt Prater",
+    "position": "K",
+    "row_index": 712
+  },
+  {
+    "year": 2024,
+    "week": 16,
+    "player_name": "Jamaal Williams",
+    "position": "RB",
+    "row_index": 2926
+  }
+]
