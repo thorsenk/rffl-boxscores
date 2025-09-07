@@ -1,0 +1,10 @@
+# Project Health Assessment Files
+# Keep templates and structure, ignore temporary or sensitive reports if needed
+
+# Uncomment if you want to keep reports private
+# reports/
+# consensus/
+
+# Keep example reports and templates
+!reports/*.example.md
+!consensus/*.example.md

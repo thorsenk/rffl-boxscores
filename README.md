@@ -163,6 +163,63 @@ The lineup validation checks for:
 - **Duplicate Players**: No player appears twice in starters
 - **Position-Slot Matching**: QB slot only has QBs, K slot only has Ks, etc.
 
+## Transaction and Roster Analysis Commands
+
+### Historical Roster Export
+Export end-of-season roster compositions for historical seasons (2011-2018):
+
+```bash
+# Export 2015 end-of-season rosters
+rffl-bs historical-rosters --league 323196 --year 2015 --out data/seasons/2015/rosters.csv
+
+# With authentication for private leagues
+rffl-bs historical-rosters --league 323196 --year 2015 --espn-s2 "cookie" --swid "cookie"
+```
+
+### Transaction History
+Export league transaction history (trades, waivers, pickups, drops):
+
+```bash
+# Export 2024 transactions (modern API)
+rffl-bs transactions --league 323196 --year 2024 --out data/seasons/2024/transactions.csv
+
+# Export with authentication
+rffl-bs transactions --league 323196 --year 2024 --espn-s2 "cookie" --swid "cookie"
+```
+
+### Roster Change Analysis
+Analyze roster changes by comparing draft results to end-of-season rosters:
+
+```bash
+# Analyze 2011-2017 roster changes
+rffl-bs roster-changes --start-year 2011 --end-year 2017 --out data/analysis/roster_changes.csv
+
+# Analyze weekly roster changes for modern seasons
+rffl-bs weekly-roster-changes --start-year 2019 --end-year 2024 --out data/analysis/weekly_changes.csv
+```
+
+### Transaction Pattern Analysis
+Estimate and analyze transaction patterns:
+
+```bash
+# Estimate historical transaction timing based on modern patterns
+rffl-bs estimate-historical-patterns --out data/analysis/estimated_patterns.csv
+
+# Analyze schedule-based transaction patterns
+rffl-bs analyze-schedule-patterns --out data/analysis/schedule_patterns.csv
+
+# Create comprehensive transaction matrix (2011-2024)
+rffl-bs create-transaction-matrix --out data/analysis/transaction_matrix.csv
+```
+
+### Data Quality Auditing
+Audit transaction data for anomalies:
+
+```bash
+# Generate comprehensive data audit report
+rffl-bs audit-transaction-data --out data/analysis/audit_report.txt
+```
+
 ## Output Format
 
 The exported CSV contains the following columns (final schema):

@@ -1,0 +1,66 @@
+RFFL Transaction Data Audit Report
+==================================================
+
+🔍 AUDIT 1: Teams with zero draft_kept players per year
+--------------------------------------------------
+2019: Teams with ZERO draft_kept players:
+  - DKEG: 16 added, 0 draft_kept
+  - JAGB: 16 added, 0 draft_kept
+  - SSBB: 16 added, 0 draft_kept
+2020: Teams with ZERO draft_kept players:
+  - SSBB: 16 added, 0 draft_kept
+2021: Teams with ZERO draft_kept players:
+  - LNO: 16 added, 0 draft_kept
+2022: Teams with ZERO draft_kept players:
+  - PKMC: 16 added, 0 draft_kept
+2023: ✅ All teams have draft_kept players
+2024: ✅ All teams have draft_kept players
+
+🔍 AUDIT 2: Unusually high transaction weeks
+--------------------------------------------------
+✅ No weeks with >100 transactions found
+
+🔍 AUDIT 3: Team participation consistency
+--------------------------------------------------
+2019: 12 teams - ['BRIM', 'CHLK', 'DKEG', 'GFM', 'JAGB', 'LNO', 'MRYJ', 'MXLB', 'PCX', 'PITB', 'SSBB', 'WZRD']
+2020: 12 teams - ['BRIM', 'CHLK', 'DKEG', 'GFM', 'JAGB', 'LNO', 'MRYJ', 'MXLB', 'PCX', 'PITB', 'SSBB', 'WZRD']
+2021: 12 teams - ['BRIM', 'CHLK', 'GFM', 'JAGB', 'LNO', 'MRYJ', 'MXLB', 'PCX', 'PITB', 'SSBB', 'TACT', 'WZRD']
+2022: 12 teams - ['BRIM', 'CHLK', 'GFM', 'JAGB', 'LNO', 'MRYJ', 'MXLB', 'PCX', 'PKMC', 'SSBB', 'TACT', 'WZRD']
+2023: 12 teams - ['BRIM', 'CHLK', 'GFM', 'JAGB', 'LNO', 'MRYJ', 'MXLB', 'PCX', 'PKMC', 'SSBB', 'TACT', 'WZRD']
+2024: 12 teams - ['BRIM', 'CHLK', 'GFM', 'JAGB', 'LNO', 'MRYJ', 'MXLB', 'PCX', 'PKMC', 'SSBB', 'TACT', 'WZRD']
+
+Team participation matrix:
+BRIM: 2019 2020 2021 2022 2023 2024
+CHLK: 2019 2020 2021 2022 2023 2024
+DKEG: 2019 2020 ---- ---- ---- ----
+GFM: 2019 2020 2021 2022 2023 2024
+JAGB: 2019 2020 2021 2022 2023 2024
+LNO: 2019 2020 2021 2022 2023 2024
+MRYJ: 2019 2020 2021 2022 2023 2024
+MXLB: 2019 2020 2021 2022 2023 2024
+PCX: 2019 2020 2021 2022 2023 2024
+PITB: 2019 2020 2021 ---- ---- ----
+PKMC: ---- ---- ---- 2022 2023 2024
+SSBB: 2019 2020 2021 2022 2023 2024
+TACT: ---- ---- 2021 2022 2023 2024
+WZRD: 2019 2020 2021 2022 2023 2024
+
+🔍 AUDIT 4: Data quality metrics
+--------------------------------------------------
+Total records: 4,465
+Missing player names: 0
+Missing team codes: 0
+Missing week numbers: 0
+
+Transaction type distribution:
+  added: 1,794 (40.2%)
+  dropped: 1,698 (38.0%)
+  draft_kept: 973 (21.8%)
+
+🔍 AUDIT 5: Recommendations
+--------------------------------------------------
+⚠️  CRITICAL: Fix draft reconciliation for years: [2019, 2020, 2021, 2022]
+   - Re-process weekly data to properly mark drafted players as 'draft_kept'
+   - This affects transaction matrix accuracy significantly
+✅ Consider implementing automated data validation checks
+✅ Add draft-roster reconciliation validation to data pipeline
